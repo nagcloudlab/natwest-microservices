@@ -1,7 +1,14 @@
 package com.ftgo.delivery;
 
+import com.ftgo.kitchen.KitchenTicket;
+import com.ftgo.kitchen.KitchenTicketRepository;
+import com.ftgo.kitchen.TicketStatus;
+import com.ftgo.order.Order;
+import com.ftgo.order.OrderRepository;
+import com.ftgo.order.OrderStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -14,6 +21,12 @@ public class DeliveryService {
 
     @Autowired
     private CourierRepository courierRepository;
+
+    @Autowired
+    private KitchenTicketRepository kitchenTicketRepository;
+
+    @Autowired
+    private OrderRepository orderRepository;
 
     public Delivery createDelivery(Long orderId, String pickupAddress, String deliveryAddress) {
         Delivery delivery = new Delivery();
@@ -41,11 +54,30 @@ public class DeliveryService {
         return deliveryRepository.save(delivery);
     }
 
+    @Transactional
     public Delivery markPickedUp(Long deliveryId) {
         Delivery delivery = deliveryRepository.findById(deliveryId)
                 .orElseThrow(() -> new RuntimeException("Delivery not found: " + deliveryId));
+
+        KitchenTicket ticket = kitchenTicketRepository.findByOrderId(delivery.getOrderId());
+        if (ticket != null && ticket.getStatus() != TicketStatus.READY_FOR_PICKUP) {
+            throw new RuntimeException("Cannot pick up — kitchen ticket is not ready yet (current status: " + ticket.getStatus() + ")");
+        }
+
         delivery.setStatus(DeliveryStatus.PICKED_UP);
+
+        Order order = orderRepository.findById(delivery.getOrderId()).orElse(null);
+        if (order != null) {
+            order.setStatus(OrderStatus.PICKED_UP);
+            orderRepository.save(order);
+        }
+
         return deliveryRepository.save(delivery);
+    }
+
+    public boolean isReadyForPickup(Long orderId) {
+        KitchenTicket ticket = kitchenTicketRepository.findByOrderId(orderId);
+        return ticket != null && ticket.getStatus() == TicketStatus.READY_FOR_PICKUP;
     }
 
     public Delivery markDelivered(Long deliveryId) {
@@ -58,6 +90,13 @@ public class DeliveryService {
                 .orElseThrow(() -> new RuntimeException("Courier not found: " + delivery.getCourierId()));
         courier.setAvailable(true);
         courierRepository.save(courier);
+
+        // Update the order status to DELIVERED
+        Order order = orderRepository.findById(delivery.getOrderId()).orElse(null);
+        if (order != null) {
+            order.setStatus(OrderStatus.DELIVERED);
+            orderRepository.save(order);
+        }
 
         return deliveryRepository.save(delivery);
     }

@@ -1,7 +1,11 @@
 package com.ftgo.kitchen;
 
+import com.ftgo.order.Order;
+import com.ftgo.order.OrderRepository;
+import com.ftgo.order.OrderStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -11,6 +15,9 @@ public class KitchenService {
 
     @Autowired
     private KitchenTicketRepository kitchenTicketRepository;
+
+    @Autowired
+    private OrderRepository orderRepository;
 
     public KitchenTicket createTicket(Long orderId, Long restaurantId, String items) {
         KitchenTicket ticket = new KitchenTicket();
@@ -30,18 +37,34 @@ public class KitchenService {
         return kitchenTicketRepository.save(ticket);
     }
 
+    @Transactional
     public KitchenTicket startPreparation(Long ticketId) {
         KitchenTicket ticket = kitchenTicketRepository.findById(ticketId)
                 .orElseThrow(() -> new RuntimeException("Ticket not found: " + ticketId));
         ticket.setStatus(TicketStatus.PREPARING);
+
+        Order order = orderRepository.findById(ticket.getOrderId()).orElse(null);
+        if (order != null) {
+            order.setStatus(OrderStatus.PREPARING);
+            orderRepository.save(order);
+        }
+
         return kitchenTicketRepository.save(ticket);
     }
 
+    @Transactional
     public KitchenTicket markReady(Long ticketId) {
         KitchenTicket ticket = kitchenTicketRepository.findById(ticketId)
                 .orElseThrow(() -> new RuntimeException("Ticket not found: " + ticketId));
         ticket.setStatus(TicketStatus.READY_FOR_PICKUP);
         ticket.setReadyAt(LocalDateTime.now());
+
+        Order order = orderRepository.findById(ticket.getOrderId()).orElse(null);
+        if (order != null) {
+            order.setStatus(OrderStatus.READY_FOR_PICKUP);
+            orderRepository.save(order);
+        }
+
         return kitchenTicketRepository.save(ticket);
     }
 
