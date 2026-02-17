@@ -1,0 +1,5 @@
+package com.ftgo.order;
+
+public enum OrderStatus {
+    PENDING, APPROVED, REJECTED, PREPARING, READY_FOR_PICKUP, PICKED_UP, DELIVERED, CANCELLED
+}
