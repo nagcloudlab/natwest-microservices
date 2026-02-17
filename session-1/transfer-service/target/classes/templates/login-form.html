@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>todos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+</head>
+
+<body class="container">
+
+    <div class="display-1">
+        Transfer Service
+    </div>
+    <hr />
+
+
+    <hr />
+    <div> Login </div>
+
+    <div class="row">
+
+        <div class="col-6">
+            <span th:if="${loginError}" class="text-danger">
+                Invalid username and password.
+            </span>
+            <hr />
+            <form action="/authenticate" method="post">
+                <div class="mb-3">
+                    <label for="title" class="form-label">Username</label>
+                    <input type="text" class="form-control" id="title" name="username" />
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="password" name="password" />
+                </div>
+                <button type="submit" class="btn btn-primary">Login</button>
+            </form>
+            <hr />
+        </div>
+    </div>
+
+</body>
+
+</html>

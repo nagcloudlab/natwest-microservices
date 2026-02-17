@@ -1,0 +1,14 @@
+
+
+
+
+Spring + SQL databases
+-----------------------
+
+-> resource management e.g closing connections, statements, result sets
+-> transaction management ( ACID properties )
+-> exception translation ( SQL exceptions to Spring exceptions )
+
+ option-1: jdbc
+
+    -> JDBC template
