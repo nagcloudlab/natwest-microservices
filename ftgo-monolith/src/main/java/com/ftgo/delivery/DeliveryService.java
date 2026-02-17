@@ -65,4 +65,33 @@ public class DeliveryService {
     public List<Delivery> getAllDeliveries() {
         return deliveryRepository.findAll();
     }
+
+    public List<Delivery> getDeliveriesByCourierId(Long courierId) {
+        return deliveryRepository.findByCourierId(courierId);
+    }
+
+    public Courier getCourier(Long id) {
+        return courierRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Courier not found: " + id));
+    }
+
+    public List<Courier> getAllCouriers() {
+        return courierRepository.findAll();
+    }
+
+    public Delivery assignSpecificCourier(Long deliveryId, Long courierId) {
+        Delivery delivery = deliveryRepository.findById(deliveryId)
+                .orElseThrow(() -> new RuntimeException("Delivery not found: " + deliveryId));
+
+        Courier courier = courierRepository.findById(courierId)
+                .orElseThrow(() -> new RuntimeException("Courier not found: " + courierId));
+
+        delivery.setCourierId(courier.getId());
+        delivery.setStatus(DeliveryStatus.COURIER_ASSIGNED);
+
+        courier.setAvailable(false);
+        courierRepository.save(courier);
+
+        return deliveryRepository.save(delivery);
+    }
 }

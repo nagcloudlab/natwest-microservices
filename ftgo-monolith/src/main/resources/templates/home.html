@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('FTGO — Home')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="container">
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bold">Food To Go</h1>
+        <p class="lead text-muted">Monolith Architecture — All modules in one application</p>
+    </div>
+
+    <div class="row g-4 justify-content-center">
+        <!-- Consumer Card -->
+        <div class="col-md-4">
+            <div class="card h-100 border-primary">
+                <div class="card-body text-center">
+                    <div class="display-6 mb-3">&#127869;</div>
+                    <h3 class="card-title">Consumer</h3>
+                    <p class="card-text text-muted">Browse restaurants, view menus, and place food orders.</p>
+                    <a th:href="@{/consumer/restaurants}" class="btn btn-primary">Browse Restaurants</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Courier Card -->
+        <div class="col-md-4">
+            <div class="card h-100 border-success">
+                <div class="card-body text-center">
+                    <div class="display-6 mb-3">&#128666;</div>
+                    <h3 class="card-title">Courier</h3>
+                    <p class="card-text text-muted">View assigned deliveries, pick up and deliver orders.</p>
+                    <a th:href="@{/courier}" class="btn btn-success">Courier Dashboard</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Restaurant Card -->
+        <div class="col-md-4">
+            <div class="card h-100 border-warning">
+                <div class="card-body text-center">
+                    <div class="display-6 mb-3">&#127859;</div>
+                    <h3 class="card-title">Restaurant</h3>
+                    <p class="card-text text-muted">Manage kitchen tickets — accept, prepare, and mark ready.</p>
+                    <a th:href="@{/restaurant}" class="btn btn-warning">Kitchen Dashboard</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center mt-5">
+        <small class="text-muted">
+            All three roles share the same database and run in a single JVM — that's the monolith!
+        </small>
+    </div>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

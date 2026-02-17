@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('FTGO — Menu')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<div class="container">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a th:href="@{/consumer/restaurants}">Restaurants</a></li>
+            <li class="breadcrumb-item active" th:text="${restaurant.name}">Restaurant</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 th:text="${restaurant.name} + ' — Menu'">Menu</h2>
+        <span class="text-muted" th:text="${restaurant.address}">Address</span>
+    </div>
+
+    <form th:action="@{/consumer/orders}" method="post">
+        <input type="hidden" name="restaurantId" th:value="${restaurant.id}">
+
+        <!-- Menu Items Table -->
+        <table class="table table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>Item</th>
+                    <th>Description</th>
+                    <th class="text-end">Price</th>
+                    <th class="text-center" style="width:100px">Qty</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="item : ${restaurant.menuItems}">
+                    <td>
+                        <strong th:text="${item.name}">Item</strong>
+                        <input type="hidden" name="menuItemIds" th:value="${item.id}">
+                    </td>
+                    <td class="text-muted" th:text="${item.description}">Description</td>
+                    <td class="text-end fw-bold" th:text="'&#8377; ' + ${#numbers.formatDecimal(item.price, 1, 2)}">Price</td>
+                    <td class="text-center">
+                        <input type="number" name="quantities" class="form-control form-control-sm text-center"
+                               value="0" min="0" max="10">
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <hr>
+
+        <!-- Customer Details -->
+        <h5 class="mb-3">Your Details</h5>
+        <div class="row g-3 mb-4">
+            <div class="col-md-6">
+                <label class="form-label">Name</label>
+                <input type="text" name="consumerName" class="form-control" required placeholder="Your name">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Contact</label>
+                <input type="text" name="consumerContact" class="form-control" required placeholder="Phone or email">
+            </div>
+            <div class="col-md-8">
+                <label class="form-label">Delivery Address</label>
+                <input type="text" name="deliveryAddress" class="form-control" required placeholder="Full delivery address">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Payment Method</label>
+                <select name="paymentMethod" class="form-select" required>
+                    <option value="CREDIT_CARD">Credit Card</option>
+                    <option value="DEBIT_CARD">Debit Card</option>
+                    <option value="UPI">UPI</option>
+                    <option value="CASH">Cash on Delivery</option>
+                </select>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg">Place Order</button>
+        <a th:href="@{/consumer/restaurants}" class="btn btn-outline-secondary btn-lg ms-2">Back</a>
+    </form>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

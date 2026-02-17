@@ -1,0 +1,83 @@
+package com.ftgo.web;
+
+import com.ftgo.delivery.Courier;
+import com.ftgo.delivery.Delivery;
+import com.ftgo.delivery.DeliveryService;
+import com.ftgo.delivery.DeliveryStatus;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.util.List;
+
+@Controller
+@RequestMapping("/courier")
+public class CourierWebController {
+
+    @Autowired
+    private DeliveryService deliveryService;
+
+    @GetMapping
+    public String courierDashboard(Model model) {
+        model.addAttribute("couriers", deliveryService.getAllCouriers());
+        return "courier/dashboard";
+    }
+
+    @GetMapping("/{id}/deliveries")
+    public String courierDeliveries(@PathVariable Long id, Model model) {
+        Courier courier = deliveryService.getCourier(id);
+        List<Delivery> myDeliveries = deliveryService.getDeliveriesByCourierId(id);
+        List<Delivery> pendingDeliveries = deliveryService.getAllDeliveries().stream()
+                .filter(d -> d.getStatus() == DeliveryStatus.PENDING)
+                .toList();
+
+        model.addAttribute("courier", courier);
+        model.addAttribute("myDeliveries", myDeliveries);
+        model.addAttribute("pendingDeliveries", pendingDeliveries);
+        return "courier/deliveries";
+    }
+
+    @PostMapping("/deliveries/{deliveryId}/assign")
+    public String assignCourier(
+            @PathVariable Long deliveryId,
+            @RequestParam Long courierId,
+            RedirectAttributes redirectAttributes) {
+        try {
+            deliveryService.assignSpecificCourier(deliveryId, courierId);
+            redirectAttributes.addFlashAttribute("success", "Delivery #" + deliveryId + " assigned to you.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/courier/" + courierId + "/deliveries";
+    }
+
+    @PostMapping("/deliveries/{deliveryId}/pickup")
+    public String markPickedUp(
+            @PathVariable Long deliveryId,
+            @RequestParam Long courierId,
+            RedirectAttributes redirectAttributes) {
+        try {
+            deliveryService.markPickedUp(deliveryId);
+            redirectAttributes.addFlashAttribute("success", "Delivery #" + deliveryId + " marked as picked up.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/courier/" + courierId + "/deliveries";
+    }
+
+    @PostMapping("/deliveries/{deliveryId}/deliver")
+    public String markDelivered(
+            @PathVariable Long deliveryId,
+            @RequestParam Long courierId,
+            RedirectAttributes redirectAttributes) {
+        try {
+            deliveryService.markDelivered(deliveryId);
+            redirectAttributes.addFlashAttribute("success", "Delivery #" + deliveryId + " marked as delivered!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/courier/" + courierId + "/deliveries";
+    }
+}

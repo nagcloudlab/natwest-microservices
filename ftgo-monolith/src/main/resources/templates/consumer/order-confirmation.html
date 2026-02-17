@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('FTGO — Order Confirmation')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="container">
+    <div class="text-center mb-4">
+        <div class="display-4 text-success">&#10004;</div>
+        <h2>Order Placed Successfully!</h2>
+    </div>
+
+    <div class="card mx-auto" style="max-width: 600px;">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">Order #<span th:text="${order.id()}">1</span></h5>
+        </div>
+        <div class="card-body">
+            <table class="table table-sm mb-3">
+                <tr>
+                    <th>Customer</th>
+                    <td th:text="${order.consumerName()}">Name</td>
+                </tr>
+                <tr>
+                    <th>Restaurant</th>
+                    <td th:text="${order.restaurantName()}">Restaurant</td>
+                </tr>
+                <tr>
+                    <th>Delivery To</th>
+                    <td th:text="${order.deliveryAddress()}">Address</td>
+                </tr>
+                <tr>
+                    <th>Status</th>
+                    <td><span class="badge bg-primary" th:text="${order.status()}">Status</span></td>
+                </tr>
+                <tr>
+                    <th>Ordered At</th>
+                    <td th:text="${#temporals.format(order.createdAt(), 'dd MMM yyyy, hh:mm a')}">Time</td>
+                </tr>
+            </table>
+
+            <h6>Items Ordered</h6>
+            <table class="table table-sm">
+                <thead class="table-light">
+                    <tr>
+                        <th>Item</th>
+                        <th class="text-center">Qty</th>
+                        <th class="text-end">Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="item : ${order.items()}">
+                        <td th:text="${item.menuItemName}">Item</td>
+                        <td class="text-center" th:text="${item.quantity}">1</td>
+                        <td class="text-end" th:text="'&#8377; ' + ${#numbers.formatDecimal(item.price, 1, 2)}">Price</td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr class="table-dark">
+                        <th colspan="2">Total</th>
+                        <th class="text-end" th:text="'&#8377; ' + ${#numbers.formatDecimal(order.totalAmount(), 1, 2)}">Total</th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+
+    <div class="text-center mt-4">
+        <a th:href="@{/consumer/restaurants}" class="btn btn-primary">Order More</a>
+        <a th:href="@{/}" class="btn btn-outline-secondary ms-2">Home</a>
+    </div>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

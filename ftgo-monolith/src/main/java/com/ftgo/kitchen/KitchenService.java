@@ -52,4 +52,8 @@ public class KitchenService {
     public List<KitchenTicket> getAllTickets() {
         return kitchenTicketRepository.findAll();
     }
+
+    public List<KitchenTicket> getTicketsByRestaurantId(Long restaurantId) {
+        return kitchenTicketRepository.findByRestaurantId(restaurantId);
+    }
 }

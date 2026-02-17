@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('FTGO — Deliveries')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<div class="container">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a th:href="@{/courier}">Couriers</a></li>
+            <li class="breadcrumb-item active" th:text="${courier.name}">Courier</li>
+        </ol>
+    </nav>
+
+    <h2 class="mb-1" th:text="${courier.name} + ' — Deliveries'">Deliveries</h2>
+    <p class="text-muted mb-4" th:text="'Phone: ' + ${courier.phone}">Phone</p>
+
+    <!-- My Assigned Deliveries -->
+    <h4 class="mt-4">My Deliveries</h4>
+    <div th:if="${#lists.isEmpty(myDeliveries)}" class="alert alert-info">
+        No deliveries assigned to you yet.
+    </div>
+
+    <table th:unless="${#lists.isEmpty(myDeliveries)}" class="table table-striped">
+        <thead class="table-dark">
+            <tr>
+                <th>Delivery #</th>
+                <th>Order #</th>
+                <th>Pickup</th>
+                <th>Deliver To</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="d : ${myDeliveries}">
+                <td th:text="${d.id}">1</td>
+                <td th:text="${d.orderId}">1</td>
+                <td th:text="${d.pickupAddress}">Pickup</td>
+                <td th:text="${d.deliveryAddress}">Address</td>
+                <td>
+                    <span class="badge"
+                          th:classappend="${d.status.name() == 'DELIVERED'} ? 'bg-success' : (${d.status.name() == 'PICKED_UP'} ? 'bg-info' : 'bg-primary')"
+                          th:text="${d.status}">Status</span>
+                </td>
+                <td>
+                    <form th:if="${d.status.name() == 'COURIER_ASSIGNED'}"
+                          th:action="@{/courier/deliveries/{id}/pickup(id=${d.id})}" method="post" class="d-inline">
+                        <input type="hidden" name="courierId" th:value="${courier.id}">
+                        <button class="btn btn-info btn-sm">Pick Up</button>
+                    </form>
+                    <form th:if="${d.status.name() == 'PICKED_UP'}"
+                          th:action="@{/courier/deliveries/{id}/deliver(id=${d.id})}" method="post" class="d-inline">
+                        <input type="hidden" name="courierId" th:value="${courier.id}">
+                        <button class="btn btn-success btn-sm">Deliver</button>
+                    </form>
+                    <span th:if="${d.status.name() == 'DELIVERED'}" class="text-success">Done</span>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- Unassigned Pending Deliveries -->
+    <h4 class="mt-5">Pending Deliveries (Unassigned)</h4>
+    <div th:if="${#lists.isEmpty(pendingDeliveries)}" class="alert alert-info">
+        No pending deliveries at the moment.
+    </div>
+
+    <table th:unless="${#lists.isEmpty(pendingDeliveries)}" class="table table-striped">
+        <thead class="table-warning">
+            <tr>
+                <th>Delivery #</th>
+                <th>Order #</th>
+                <th>Pickup</th>
+                <th>Deliver To</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="d : ${pendingDeliveries}">
+                <td th:text="${d.id}">1</td>
+                <td th:text="${d.orderId}">1</td>
+                <td th:text="${d.pickupAddress}">Pickup</td>
+                <td th:text="${d.deliveryAddress}">Address</td>
+                <td>
+                    <form th:action="@{/courier/deliveries/{id}/assign(id=${d.id})}" method="post" class="d-inline">
+                        <input type="hidden" name="courierId" th:value="${courier.id}">
+                        <button class="btn btn-primary btn-sm">Assign to Me</button>
+                    </form>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <a th:href="@{/courier}" class="btn btn-outline-secondary mt-3">Back to Couriers</a>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

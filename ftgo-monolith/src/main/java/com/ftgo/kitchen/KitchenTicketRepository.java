@@ -8,4 +8,5 @@ import java.util.List;
 @Repository
 public interface KitchenTicketRepository extends JpaRepository<KitchenTicket, Long> {
     List<KitchenTicket> findByStatus(TicketStatus status);
+    List<KitchenTicket> findByRestaurantId(Long restaurantId);
 }

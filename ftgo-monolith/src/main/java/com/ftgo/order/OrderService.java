@@ -130,6 +130,12 @@ public class OrderService {
                 .toList();
     }
 
+    public List<OrderResponse> getOrdersByConsumerId(Long consumerId) {
+        return orderRepository.findByConsumerId(consumerId).stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
     @Transactional
     public OrderResponse cancelOrder(Long id) {
         Order order = orderRepository.findById(id)

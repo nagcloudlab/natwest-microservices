@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('FTGO — Kitchen Tickets')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<div class="container">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a th:href="@{/restaurant}">Restaurants</a></li>
+            <li class="breadcrumb-item active" th:text="${restaurant.name}">Restaurant</li>
+        </ol>
+    </nav>
+
+    <h2 class="mb-1" th:text="${restaurant.name} + ' — Kitchen Tickets'">Tickets</h2>
+    <p class="text-muted mb-4" th:text="${restaurant.address}">Address</p>
+
+    <div th:if="${#lists.isEmpty(tickets)}" class="alert alert-info">
+        No kitchen tickets yet. Orders will appear here once consumers place them.
+    </div>
+
+    <table th:unless="${#lists.isEmpty(tickets)}" class="table table-striped">
+        <thead class="table-dark">
+            <tr>
+                <th>Ticket #</th>
+                <th>Order #</th>
+                <th>Items</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="t : ${tickets}">
+                <td th:text="${t.id}">1</td>
+                <td th:text="${t.orderId}">1</td>
+                <td th:text="${t.items}">Items</td>
+                <td>
+                    <span class="badge"
+                          th:classappend="${t.status.name() == 'READY_FOR_PICKUP'} ? 'bg-success' : (${t.status.name() == 'PREPARING'} ? 'bg-info' : (${t.status.name() == 'ACCEPTED'} ? 'bg-primary' : 'bg-warning text-dark'))"
+                          th:text="${t.status}">Status</span>
+                </td>
+                <td th:text="${#temporals.format(t.createdAt, 'dd MMM, hh:mm a')}">Time</td>
+                <td>
+                    <form th:if="${t.status.name() == 'CREATED'}"
+                          th:action="@{/restaurant/tickets/{id}/accept(id=${t.id})}" method="post" class="d-inline">
+                        <input type="hidden" name="restaurantId" th:value="${restaurant.id}">
+                        <button class="btn btn-primary btn-sm">Accept</button>
+                    </form>
+                    <form th:if="${t.status.name() == 'ACCEPTED'}"
+                          th:action="@{/restaurant/tickets/{id}/preparing(id=${t.id})}" method="post" class="d-inline">
+                        <input type="hidden" name="restaurantId" th:value="${restaurant.id}">
+                        <button class="btn btn-info btn-sm">Start Preparing</button>
+                    </form>
+                    <form th:if="${t.status.name() == 'PREPARING'}"
+                          th:action="@{/restaurant/tickets/{id}/ready(id=${t.id})}" method="post" class="d-inline">
+                        <input type="hidden" name="restaurantId" th:value="${restaurant.id}">
+                        <button class="btn btn-success btn-sm">Mark Ready</button>
+                    </form>
+                    <span th:if="${t.status.name() == 'READY_FOR_PICKUP'}" class="text-success fw-bold">Ready!</span>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <a th:href="@{/restaurant}" class="btn btn-outline-secondary mt-3">Back to Restaurants</a>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>
