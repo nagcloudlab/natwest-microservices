@@ -153,7 +153,7 @@ public class RestaurantServiceClient {
      * Fallback for getRestaurant() — can't degrade, must throw.
      * We need restaurant details to create an order.
      */
-    private Restaurant getRestaurantFallback(Long id, Throwable t) {
+    public Restaurant getRestaurantFallback(Long id, Throwable t) {
         log.error(">>> FALLBACK: Cannot fetch restaurant #{}. Reason: {}", id, t.getMessage());
         throw new RuntimeException(
                 "Restaurant service is currently unavailable. Please try again later.");
@@ -163,7 +163,7 @@ public class RestaurantServiceClient {
      * Fallback for getAllRestaurants() — GRACEFUL DEGRADATION.
      * Return empty list instead of 500 error. The UI shows "no restaurants available".
      */
-    private List<Restaurant> getAllRestaurantsFallback(Throwable t) {
+    public List<Restaurant> getAllRestaurantsFallback(Throwable t) {
         log.warn(">>> FALLBACK: Restaurant service unavailable, returning empty list. Reason: {}", t.getMessage());
         return List.of();
     }
@@ -172,7 +172,7 @@ public class RestaurantServiceClient {
      * Fallback for getMenuItemsByIds() — can't degrade, must throw.
      * We need menu items to calculate order totals.
      */
-    private List<MenuItem> getMenuItemsByIdsFallback(List<Long> ids, Throwable t) {
+    public List<MenuItem> getMenuItemsByIdsFallback(List<Long> ids, Throwable t) {
         log.error(">>> FALLBACK: Cannot fetch menu items {}. Reason: {}", ids, t.getMessage());
         throw new RuntimeException(
                 "Restaurant service is currently unavailable. Cannot retrieve menu items for order.");
