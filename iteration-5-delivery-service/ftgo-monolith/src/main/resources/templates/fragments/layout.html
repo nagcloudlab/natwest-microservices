@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<!-- Shared <head> fragment -->
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${title}">FTGO</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; }
+        .navbar-brand { font-weight: 700; letter-spacing: 1px; }
+        .card { transition: transform 0.15s; }
+        .card:hover { transform: translateY(-2px); }
+        .badge-status { font-size: 0.85rem; }
+
+        /* Role badges */
+        .role-consumer { background-color: #0d6efd; color: #fff; }
+        .role-courier  { background-color: #198754; color: #fff; }
+        .role-restaurant { background-color: #ffc107; color: #212529; }
+
+        /* Section headings */
+        .section-heading {
+            font-weight: 700;
+            border-bottom: 3px solid #0d6efd;
+            display: inline-block;
+            padding-bottom: 0.25rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Status pulse animation */
+        @keyframes status-pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .pulse { animation: status-pulse 2s ease-in-out infinite; }
+
+        /* Stepper */
+        .stepper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: #fff;
+            border-radius: 0.5rem;
+            border: 1px solid #dee2e6;
+        }
+        .stepper-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            position: relative;
+            text-align: center;
+        }
+        .stepper-step .step-circle {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.85rem;
+            margin-bottom: 0.4rem;
+            border: 2px solid #dee2e6;
+            background: #fff;
+            color: #6c757d;
+        }
+        .stepper-step.active .step-circle {
+            border-color: #0d6efd;
+            background: #0d6efd;
+            color: #fff;
+        }
+        .stepper-step.done .step-circle {
+            border-color: #198754;
+            background: #198754;
+            color: #fff;
+        }
+        .stepper-step .step-label {
+            font-size: 0.75rem;
+            color: #6c757d;
+        }
+        .stepper-step.active .step-label,
+        .stepper-step.done .step-label {
+            color: #212529;
+            font-weight: 600;
+        }
+        .stepper-connector {
+            flex: 1;
+            height: 2px;
+            background: #dee2e6;
+            margin: 0 0.25rem;
+            margin-bottom: 1.2rem;
+        }
+        .stepper-connector.done {
+            background: #198754;
+        }
+
+        /* Workflow guide callout */
+        .workflow-guide {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-left: 4px solid #0d6efd;
+            border-radius: 0.5rem;
+            padding: 1rem 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+        .workflow-guide.restaurant-guide { border-left-color: #ffc107; }
+        .workflow-guide.courier-guide { border-left-color: #198754; }
+
+        /* Tip callout */
+        .tip-callout {
+            background: #fff3cd;
+            border: 1px solid #ffecb5;
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Hero banner */
+        .hero-banner {
+            background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
+            color: #fff;
+            border-radius: 0.75rem;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+        }
+        .hero-banner.restaurant-hero {
+            background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+            color: #212529;
+        }
+        .hero-banner.courier-hero {
+            background: linear-gradient(135deg, #198754 0%, #157347 100%);
+        }
+
+        /* Coloured left border cards */
+        .card-open { border-left: 4px solid #198754 !important; }
+        .card-closed { border-left: 4px solid #adb5bd !important; }
+
+        /* Table row colouring */
+        .row-created { background-color: #fff3cd !important; }
+        .row-accepted { background-color: #cfe2ff !important; }
+        .row-preparing { background-color: #d1ecf1 !important; }
+        .row-ready { background-color: #d1e7dd !important; }
+        .row-pending { background-color: #fff3cd !important; }
+        .row-assigned { background-color: #cfe2ff !important; }
+        .row-picked-up { background-color: #d1ecf1 !important; }
+        .row-delivered { background-color: #d1e7dd !important; }
+
+        /* Floating order summary */
+        .order-summary-bar {
+            position: sticky;
+            bottom: 0;
+            background: #212529;
+            color: #fff;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem 0.75rem 0 0;
+            margin-top: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 -4px 12px rgba(0,0,0,0.15);
+        }
+    </style>
+</head>
+
+<!-- Navbar fragment -->
+<nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+    <div class="container">
+        <a class="navbar-brand" th:href="@{/}"><i class="bi bi-shop"></i> FTGO Monolith</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/consumer/restaurants}" id="nav-consumer">
+                        <i class="bi bi-bag-heart"></i> Consumer
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/courier}" id="nav-courier">
+                        <i class="bi bi-bicycle"></i> Courier
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/restaurant}" id="nav-restaurant">
+                        <i class="bi bi-fire"></i> Restaurant
+                    </a>
+                </li>
+            </ul>
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/h2-console}" target="_blank">
+                        <i class="bi bi-database"></i> H2 Console
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Active nav highlighting script fragment -->
+<script th:fragment="navHighlight">
+(function() {
+    var path = window.location.pathname;
+    if (path.startsWith('/consumer')) {
+        document.getElementById('nav-consumer')?.classList.add('active');
+    } else if (path.startsWith('/courier')) {
+        document.getElementById('nav-courier')?.classList.add('active');
+    } else if (path.startsWith('/restaurant')) {
+        document.getElementById('nav-restaurant')?.classList.add('active');
+    }
+})();
+</script>
+
+<!-- Alert fragment (success / error flash messages) -->
+<div th:fragment="alerts" class="container">
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle-fill me-1"></i>
+        <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-1"></i>
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+</div>
+
+<!-- Scripts fragment -->
+<div th:fragment="scripts">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:replace="~{fragments/layout :: navHighlight}"></script>
+</div>
+
+</html>

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('FTGO — My Orders')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<div class="container">
+    <h2 class="mb-4"><i class="bi bi-receipt"></i> Track My Orders</h2>
+
+    <!-- Tip callout -->
+    <div class="tip-callout">
+        <i class="bi bi-lightbulb-fill text-warning me-1"></i>
+        <strong>Tip:</strong> Consumer ID <code>1</code> is the default seed consumer.
+        If you placed orders via the UI, try Consumer ID <code>1</code> first.
+    </div>
+
+    <form th:action="@{/consumer/orders}" method="get" class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-person"></i></span>
+                <input type="number" name="consumerId" class="form-control" placeholder="Enter Consumer ID"
+                       th:value="${consumerId}" required>
+                <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i> Look Up</button>
+            </div>
+        </div>
+    </form>
+
+    <!-- Empty state when no consumer ID entered yet -->
+    <div th:if="${orders == null}" class="text-center py-5">
+        <i class="bi bi-search display-1 text-muted"></i>
+        <p class="text-muted mt-3 mb-0">Enter a Consumer ID above to view orders.</p>
+    </div>
+
+    <div th:if="${orders != null and #lists.isEmpty(orders)}" class="alert alert-info">
+        <i class="bi bi-info-circle me-1"></i>
+        No orders found for Consumer ID <span th:text="${consumerId}">0</span>.
+    </div>
+
+    <div th:if="${orders != null and !#lists.isEmpty(orders)}">
+        <table class="table table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>Order #</th>
+                    <th>Restaurant</th>
+                    <th>Items</th>
+                    <th class="text-end">Total</th>
+                    <th>Status</th>
+                    <th>Ordered At</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="order : ${orders}">
+                    <td>
+                        <a th:href="@{/consumer/orders/{id}/confirmation(id=${order.id()})}"
+                           th:text="'#' + ${order.id()}">Link</a>
+                    </td>
+                    <td th:text="${order.restaurantName()}">Restaurant</td>
+                    <td>
+                        <small th:each="item, stat : ${order.items()}">
+                            <span th:text="${item.quantity} + 'x ' + ${item.menuItemName}">Item</span>
+                            <span th:unless="${stat.last}">, </span>
+                        </small>
+                    </td>
+                    <td class="text-end fw-bold" th:text="'&#8377; ' + ${#numbers.formatDecimal(order.totalAmount(), 1, 2)}">Total</td>
+                    <td>
+                        <span class="badge"
+                              th:classappend="${order.status() == 'APPROVED' ? 'bg-success' : (order.status() == 'CANCELLED' ? 'bg-danger' : (order.status() == 'PENDING' ? 'bg-warning text-dark' : (order.status() == 'REJECTED' ? 'bg-danger' : 'bg-primary')))}"
+                              th:text="${order.status()}">Status</span>
+                    </td>
+                    <td th:text="${#temporals.format(order.createdAt(), 'dd MMM, hh:mm a')}">Time</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <a th:href="@{/consumer/restaurants}" class="btn btn-outline-primary"><i class="bi bi-shop-window"></i> Browse Restaurants</a>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

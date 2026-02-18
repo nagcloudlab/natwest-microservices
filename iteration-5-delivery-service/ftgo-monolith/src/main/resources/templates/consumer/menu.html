@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('FTGO — Menu')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<div class="container">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a th:href="@{/consumer/restaurants}"><i class="bi bi-shop-window"></i> Restaurants</a></li>
+            <li class="breadcrumb-item active" th:text="${restaurant.name}">Restaurant</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2><i class="bi bi-book"></i> <span th:text="${restaurant.name}">Name</span> — Menu</h2>
+        <span class="text-muted"><i class="bi bi-geo-alt"></i> <span th:text="${restaurant.address}">Address</span></span>
+    </div>
+
+    <form th:action="@{/consumer/orders}" method="post" id="orderForm">
+        <input type="hidden" name="restaurantId" th:value="${restaurant.id}">
+
+        <!-- Menu Items as cards -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-6 col-lg-4" th:each="item, stat : ${restaurant.menuItems}">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <h6 class="card-title mb-1" th:text="${item.name}">Item</h6>
+                            <span class="badge bg-primary fs-6" th:text="'&#8377; ' + ${#numbers.formatDecimal(item.price, 1, 2)}">Price</span>
+                        </div>
+                        <p class="text-muted small mb-2" th:text="${item.description}">Description</p>
+                        <input type="hidden" name="menuItemIds" th:value="${item.id}">
+                        <div class="input-group input-group-sm" style="max-width: 140px;">
+                            <span class="input-group-text">Qty</span>
+                            <input type="number" name="quantities" class="form-control text-center menu-qty"
+                                   value="0" min="0" max="10"
+                                   th:data-price="${item.price}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <hr>
+
+        <!-- Customer Details wrapped in card -->
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="bi bi-person-fill"></i> Your Details</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Name</label>
+                        <input type="text" name="consumerName" class="form-control" required placeholder="Your name">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Contact</label>
+                        <input type="text" name="consumerContact" class="form-control" required placeholder="Phone or email">
+                    </div>
+                    <div class="col-md-8">
+                        <label class="form-label">Delivery Address</label>
+                        <input type="text" name="deliveryAddress" class="form-control" required placeholder="Full delivery address">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Payment Method</label>
+                        <select name="paymentMethod" class="form-select" required>
+                            <option value="CREDIT_CARD">Credit Card</option>
+                            <option value="DEBIT_CARD">Debit Card</option>
+                            <option value="UPI">UPI</option>
+                            <option value="CASH">Cash on Delivery</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-cart-check"></i> Place Order</button>
+        <a th:href="@{/consumer/restaurants}" class="btn btn-outline-secondary btn-lg ms-2">Back</a>
+    </form>
+</div>
+
+<!-- Floating order summary -->
+<div class="order-summary-bar" id="orderSummary" style="display:none;">
+    <div>
+        <i class="bi bi-cart3 me-2"></i>
+        <span id="summaryItems">0 items</span>
+    </div>
+    <div class="fw-bold fs-5">
+        &#8377; <span id="summaryTotal">0.00</span>
+    </div>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+
+<script>
+(function() {
+    var qtyInputs = document.querySelectorAll('.menu-qty');
+    var summaryBar = document.getElementById('orderSummary');
+    var summaryItems = document.getElementById('summaryItems');
+    var summaryTotal = document.getElementById('summaryTotal');
+
+    function updateTotal() {
+        var total = 0;
+        var count = 0;
+        qtyInputs.forEach(function(input) {
+            var qty = parseInt(input.value) || 0;
+            var price = parseFloat(input.dataset.price) || 0;
+            if (qty > 0) {
+                total += qty * price;
+                count += qty;
+            }
+        });
+        summaryTotal.textContent = total.toFixed(2);
+        summaryItems.textContent = count + (count === 1 ? ' item' : ' items');
+        summaryBar.style.display = count > 0 ? 'flex' : 'none';
+    }
+
+    qtyInputs.forEach(function(input) {
+        input.addEventListener('input', updateTotal);
+        input.addEventListener('change', updateTotal);
+    });
+})();
+</script>
+</body>
+</html>

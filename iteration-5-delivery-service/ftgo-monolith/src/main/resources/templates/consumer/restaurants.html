@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('FTGO — Restaurants')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<div class="container">
+    <!-- Hero banner -->
+    <div class="hero-banner">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="mb-1"><i class="bi bi-shop-window"></i> Browse Restaurants</h2>
+                <p class="mb-0 opacity-75">Choose a restaurant and build your order</p>
+            </div>
+            <a th:href="@{/consumer/orders}" class="btn btn-light"><i class="bi bi-receipt"></i> My Orders</a>
+        </div>
+    </div>
+
+    <!-- Tip callout -->
+    <div class="tip-callout">
+        <i class="bi bi-lightbulb-fill text-warning me-1"></i>
+        <strong>Tip:</strong> Only <span class="badge bg-success">Open</span> restaurants can accept orders.
+        Closed restaurants are shown but their menus are unavailable.
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-4" th:each="r : ${restaurants}">
+            <div class="card h-100" th:classappend="${r.open} ? 'card-open' : 'card-closed'">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <span class="fs-4 me-2" th:text="${r.open} ? '&#127859;' : '&#128260;'">icon</span>
+                            <h5 class="card-title d-inline align-middle" th:text="${r.name}">Restaurant</h5>
+                        </div>
+                        <span th:if="${r.open}" class="badge bg-success badge-status pulse">Open</span>
+                        <span th:unless="${r.open}" class="badge bg-secondary badge-status">Closed</span>
+                    </div>
+                    <p class="card-text text-muted mb-1 mt-2">
+                        <i class="bi bi-geo-alt"></i> <span th:text="${r.address}">Address</span>
+                    </p>
+                    <p class="card-text text-muted mb-3">
+                        <i class="bi bi-telephone"></i> <small th:text="${r.phone}">Phone</small>
+                    </p>
+                    <span class="badge bg-light text-dark border" th:text="${#lists.size(r.menuItems)} + ' items on menu'">Items</span>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <a th:if="${r.open}"
+                       th:href="@{/consumer/restaurants/{id}/menu(id=${r.id})}"
+                       class="btn btn-primary btn-sm w-100"><i class="bi bi-book"></i> View Menu</a>
+                    <button th:unless="${r.open}" class="btn btn-secondary btn-sm w-100" disabled>
+                        <i class="bi bi-lock"></i> Currently Closed
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

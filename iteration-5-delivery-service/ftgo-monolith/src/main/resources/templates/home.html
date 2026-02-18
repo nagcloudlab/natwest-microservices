@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('FTGO — Home')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="container">
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bold">Food To Go</h1>
+        <p class="lead text-muted">Monolith Architecture — All modules in one application</p>
+    </div>
+
+    <div class="row g-4 justify-content-center">
+        <!-- Consumer Card -->
+        <div class="col-md-4">
+            <div class="card h-100 border-primary">
+                <div class="card-body text-center">
+                    <div class="display-6 mb-3">&#127869;</div>
+                    <h3 class="card-title">Consumer</h3>
+                    <p class="card-text text-muted">Browse restaurants, view menus, and place food orders.</p>
+                    <a th:href="@{/consumer/restaurants}" class="btn btn-primary">Browse Restaurants</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Courier Card -->
+        <div class="col-md-4">
+            <div class="card h-100 border-success">
+                <div class="card-body text-center">
+                    <div class="display-6 mb-3">&#128666;</div>
+                    <h3 class="card-title">Courier</h3>
+                    <p class="card-text text-muted">View assigned deliveries, pick up and deliver orders.</p>
+                    <a th:href="@{/courier}" class="btn btn-success">Courier Dashboard</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Restaurant Card -->
+        <div class="col-md-4">
+            <div class="card h-100 border-warning">
+                <div class="card-body text-center">
+                    <div class="display-6 mb-3">&#127859;</div>
+                    <h3 class="card-title">Restaurant</h3>
+                    <p class="card-text text-muted">Manage kitchen tickets — accept, prepare, and mark ready.</p>
+                    <a th:href="@{/restaurant}" class="btn btn-warning">Kitchen Dashboard</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center mt-5 mb-4">
+        <small class="text-muted">
+            All three roles share the same database and run in a single JVM — that's the monolith!
+        </small>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!--  SECTION 1 — Architecture Overview                                -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <hr class="my-5">
+    <h2 class="text-center mb-4">Architecture Overview</h2>
+    <p class="text-center text-muted mb-4">
+        Single JVM &middot; Single H2 Database &middot; Single Deploy
+    </p>
+
+    <div class="row g-3 justify-content-center mb-3">
+        <div class="col-md-2 col-4">
+            <div class="card text-center border-primary">
+                <div class="card-body py-3">
+                    <div class="fs-4">&#128230;</div>
+                    <small class="fw-bold">Order</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 col-4">
+            <div class="card text-center border-warning">
+                <div class="card-body py-3">
+                    <div class="fs-4">&#127859;</div>
+                    <small class="fw-bold">Restaurant</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 col-4">
+            <div class="card text-center border-info">
+                <div class="card-body py-3">
+                    <div class="fs-4">&#127859;</div>
+                    <small class="fw-bold">Kitchen</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 col-4">
+            <div class="card text-center border-success">
+                <div class="card-body py-3">
+                    <div class="fs-4">&#128666;</div>
+                    <small class="fw-bold">Delivery</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 col-4">
+            <div class="card text-center border-secondary">
+                <div class="card-body py-3">
+                    <div class="fs-4">&#128179;</div>
+                    <small class="fw-bold">Accounting</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 col-4">
+            <div class="card text-center border-danger">
+                <div class="card-body py-3">
+                    <div class="fs-4">&#128276;</div>
+                    <small class="fw-bold">Notification</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center mb-2">
+        <span class="fs-4">&#11015;&#65039; &#11015;&#65039; &#11015;&#65039; &#11015;&#65039; &#11015;&#65039; &#11015;&#65039;</span>
+    </div>
+    <div class="row justify-content-center">
+        <div class="col-md-4">
+            <div class="card text-center bg-dark text-white">
+                <div class="card-body py-3">
+                    <div class="fs-4">&#128451;</div>
+                    <strong>H2 Database</strong><br>
+                    <small>9 tables &middot; jdbc:h2:mem:ftgo</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!--  SECTION 2 — Order Lifecycle Flow                                 -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <hr class="my-5">
+    <h2 class="text-center mb-4">Order Lifecycle</h2>
+
+    <h6 class="text-center text-muted mb-3">Create Order — single <code>@Transactional</code> call</h6>
+    <div class="d-flex flex-wrap justify-content-center gap-2 mb-4">
+        <span class="badge bg-primary rounded-pill px-3 py-2">1. Validate Restaurant</span>
+        <span class="text-muted align-self-center">&rarr;</span>
+        <span class="badge bg-secondary rounded-pill px-3 py-2">2. Authorize Payment</span>
+        <span class="text-muted align-self-center">&rarr;</span>
+        <span class="badge bg-info text-dark rounded-pill px-3 py-2">3. Create Kitchen Ticket</span>
+        <span class="text-muted align-self-center">&rarr;</span>
+        <span class="badge bg-success rounded-pill px-3 py-2">4. Create Delivery</span>
+        <span class="text-muted align-self-center">&rarr;</span>
+        <span class="badge bg-danger rounded-pill px-3 py-2">5. Send Notification</span>
+        <span class="text-muted align-self-center">&rarr;</span>
+        <span class="badge bg-dark rounded-pill px-3 py-2">6. APPROVED</span>
+    </div>
+
+    <h6 class="text-center text-muted mb-3">Post-Order Flow</h6>
+    <div class="row g-3 justify-content-center">
+        <div class="col-md-5">
+            <div class="card border-warning">
+                <div class="card-header bg-warning bg-opacity-10 fw-bold">Restaurant Kitchen</div>
+                <div class="card-body">
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                        <span class="badge bg-warning text-dark">CREATED</span>
+                        <span>&rarr;</span>
+                        <span class="badge bg-warning text-dark">ACCEPTED</span>
+                        <span>&rarr;</span>
+                        <span class="badge bg-warning text-dark">PREPARING</span>
+                        <span>&rarr;</span>
+                        <span class="badge bg-warning text-dark">READY FOR PICKUP</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-5">
+            <div class="card border-success">
+                <div class="card-header bg-success bg-opacity-10 fw-bold">Courier Delivery</div>
+                <div class="card-body">
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                        <span class="badge bg-success">PENDING</span>
+                        <span>&rarr;</span>
+                        <span class="badge bg-success">ASSIGNED</span>
+                        <span>&rarr;</span>
+                        <span class="badge bg-success">PICKED UP</span>
+                        <span>&rarr;</span>
+                        <span class="badge bg-success">DELIVERED</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="text-center mt-3">
+        <small class="text-danger fw-bold">
+            &#9888; Courier cannot pick up until kitchen marks READY_FOR_PICKUP
+        </small>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!--  SECTION 3 — API + Web Routes Quick Reference                     -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <hr class="my-5">
+    <h2 class="text-center mb-4">API &amp; Web Routes</h2>
+    <div class="row g-4">
+        <!-- REST API column -->
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header fw-bold">REST API Endpoints</div>
+                <div class="card-body p-0">
+                    <table class="table table-sm table-striped mb-0">
+                        <thead class="table-dark">
+                            <tr><th>Method</th><th>Path</th><th>Description</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><span class="badge bg-success">POST</span></td><td><code>/api/orders</code></td><td>Create order</td></tr>
+                            <tr><td><span class="badge bg-primary">GET</span></td><td><code>/api/orders</code></td><td>List orders</td></tr>
+                            <tr><td><span class="badge bg-primary">GET</span></td><td><code>/api/orders/{id}</code></td><td>Get order</td></tr>
+                            <tr><td><span class="badge bg-warning text-dark">PUT</span></td><td><code>/api/orders/{id}/cancel</code></td><td>Cancel order</td></tr>
+                            <tr class="table-group-divider"><td><span class="badge bg-primary">GET</span></td><td><code>/api/restaurants</code></td><td>List restaurants</td></tr>
+                            <tr><td><span class="badge bg-primary">GET</span></td><td><code>/api/restaurants/{id}</code></td><td>Get restaurant</td></tr>
+                            <tr><td><span class="badge bg-primary">GET</span></td><td><code>/api/restaurants/{id}/menu</code></td><td>Get menu</td></tr>
+                            <tr class="table-group-divider"><td><span class="badge bg-primary">GET</span></td><td><code>/api/kitchen/tickets</code></td><td>List tickets</td></tr>
+                            <tr><td><span class="badge bg-warning text-dark">PUT</span></td><td><code>/api/kitchen/tickets/{id}/accept</code></td><td>Accept ticket</td></tr>
+                            <tr><td><span class="badge bg-warning text-dark">PUT</span></td><td><code>/api/kitchen/tickets/{id}/preparing</code></td><td>Start preparing</td></tr>
+                            <tr><td><span class="badge bg-warning text-dark">PUT</span></td><td><code>/api/kitchen/tickets/{id}/ready</code></td><td>Mark ready</td></tr>
+                            <tr class="table-group-divider"><td><span class="badge bg-primary">GET</span></td><td><code>/api/deliveries</code></td><td>List deliveries</td></tr>
+                            <tr><td><span class="badge bg-warning text-dark">PUT</span></td><td><code>/api/deliveries/{id}/assign</code></td><td>Assign courier</td></tr>
+                            <tr><td><span class="badge bg-warning text-dark">PUT</span></td><td><code>/api/deliveries/{id}/pickup</code></td><td>Mark picked up</td></tr>
+                            <tr><td><span class="badge bg-warning text-dark">PUT</span></td><td><code>/api/deliveries/{id}/deliver</code></td><td>Mark delivered</td></tr>
+                            <tr class="table-group-divider"><td><span class="badge bg-primary">GET</span></td><td><code>/api/payments/order/{orderId}</code></td><td>Get payment</td></tr>
+                            <tr><td><span class="badge bg-primary">GET</span></td><td><code>/api/notifications/order/{orderId}</code></td><td>Get notifications</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Web UI column -->
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header fw-bold">Web UI Routes</div>
+                <div class="card-body p-0">
+                    <table class="table table-sm table-striped mb-0">
+                        <thead class="table-dark">
+                            <tr><th>Path</th><th>Page</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>/</code></td><td>Home (this page)</td></tr>
+                            <tr class="table-group-divider"><td><code>/consumer/restaurants</code></td><td>Browse restaurants</td></tr>
+                            <tr><td><code>/consumer/restaurants/{id}/menu</code></td><td>View menu &amp; place order</td></tr>
+                            <tr><td><code>/consumer/orders/{id}/confirmation</code></td><td>Order confirmation</td></tr>
+                            <tr><td><code>/consumer/orders</code></td><td>My orders</td></tr>
+                            <tr class="table-group-divider"><td><code>/restaurant</code></td><td>Restaurant dashboard</td></tr>
+                            <tr><td><code>/restaurant/{id}/tickets</code></td><td>Kitchen tickets</td></tr>
+                            <tr class="table-group-divider"><td><code>/courier</code></td><td>Courier dashboard</td></tr>
+                            <tr><td><code>/courier/{id}/deliveries</code></td><td>Deliveries for courier</td></tr>
+                            <tr class="table-group-divider"><td><code>/h2-console</code></td><td>H2 Database Console</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!--  SECTION 4 — Seed Data Summary                                    -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <hr class="my-5">
+    <h2 class="text-center mb-4">Seed Data</h2>
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-header fw-bold">Restaurants</div>
+                <div class="card-body p-0">
+                    <table class="table table-sm mb-0">
+                        <thead class="table-light"><tr><th>Name</th><th>Status</th></tr></thead>
+                        <tbody>
+                            <tr><td>Mumbai Masala</td><td><span class="badge bg-success">Open</span></td></tr>
+                            <tr><td>Delhi Darbar</td><td><span class="badge bg-success">Open</span></td></tr>
+                            <tr><td>Chennai Spice</td><td><span class="badge bg-danger">Closed</span></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card h-100">
+                <div class="card-header fw-bold">Menu Items</div>
+                <div class="card-body p-0">
+                    <table class="table table-sm mb-0">
+                        <thead class="table-light"><tr><th>Restaurant</th><th>Item</th><th>Price</th></tr></thead>
+                        <tbody>
+                            <tr><td>Mumbai Masala</td><td>Butter Chicken</td><td>&#8377;350</td></tr>
+                            <tr><td>Mumbai Masala</td><td>Paneer Tikka</td><td>&#8377;280</td></tr>
+                            <tr><td>Mumbai Masala</td><td>Chicken Biryani</td><td>&#8377;320</td></tr>
+                            <tr><td>Mumbai Masala</td><td>Garlic Naan</td><td>&#8377;60</td></tr>
+                            <tr><td>Delhi Darbar</td><td>Chole Bhature</td><td>&#8377;180</td></tr>
+                            <tr><td>Delhi Darbar</td><td>Dal Makhani</td><td>&#8377;220</td></tr>
+                            <tr><td>Delhi Darbar</td><td>Tandoori Chicken</td><td>&#8377;400</td></tr>
+                            <tr><td>Chennai Spice</td><td>Masala Dosa</td><td>&#8377;150</td></tr>
+                            <tr><td>Chennai Spice</td><td>Idli Sambar</td><td>&#8377;120</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3">
+            <div class="card h-100">
+                <div class="card-header fw-bold">Couriers</div>
+                <div class="card-body p-0">
+                    <table class="table table-sm mb-0">
+                        <thead class="table-light"><tr><th>Name</th><th>Status</th></tr></thead>
+                        <tbody>
+                            <tr><td>Ravi Kumar</td><td><span class="badge bg-success">Available</span></td></tr>
+                            <tr><td>Priya Sharma</td><td><span class="badge bg-success">Available</span></td></tr>
+                            <tr><td>Amit Patel</td><td><span class="badge bg-danger">Busy</span></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center mt-4 mb-5">
+        <small class="text-muted">
+            Seed data is loaded from <code>data.sql</code> on every startup.
+            Open the <a th:href="@{/h2-console}" target="_blank">H2 Console</a> to inspect tables directly.
+        </small>
+    </div>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

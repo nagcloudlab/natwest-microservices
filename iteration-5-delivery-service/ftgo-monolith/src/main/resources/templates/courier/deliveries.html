@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('FTGO — Deliveries')}"></head>
+<body>
+<!-- Auto-refresh every 15 seconds -->
+<meta http-equiv="refresh" content="15">
+
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<div class="container">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a th:href="@{/courier}"><i class="bi bi-bicycle"></i> Couriers</a></li>
+            <li class="breadcrumb-item active" th:text="${courier.name}">Courier</li>
+        </ol>
+    </nav>
+
+    <h2 class="mb-1"><i class="bi bi-truck"></i> <span th:text="${courier.name}">Name</span> — Deliveries</h2>
+    <p class="text-muted mb-3"><i class="bi bi-telephone"></i> <span th:text="${courier.phone}">Phone</span></p>
+
+    <!-- Progress stepper -->
+    <div class="stepper">
+        <div class="stepper-step">
+            <div class="step-circle">1</div>
+            <span class="step-label">PENDING</span>
+        </div>
+        <div class="stepper-connector"></div>
+        <div class="stepper-step">
+            <div class="step-circle">2</div>
+            <span class="step-label">ASSIGNED</span>
+        </div>
+        <div class="stepper-connector"></div>
+        <div class="stepper-step">
+            <div class="step-circle">3</div>
+            <span class="step-label">PICKED UP</span>
+        </div>
+        <div class="stepper-connector"></div>
+        <div class="stepper-step">
+            <div class="step-circle">4</div>
+            <span class="step-label">DELIVERED</span>
+        </div>
+    </div>
+
+    <!-- Kitchen-ready explanation -->
+    <div class="workflow-guide courier-guide">
+        <i class="bi bi-info-circle-fill me-1"></i>
+        <strong>Workflow:</strong>
+        Assign yourself a pending delivery, then wait for the kitchen to mark the order
+        <span class="badge bg-success">READY FOR PICKUP</span>.
+        The <span class="badge bg-secondary">Waiting for Kitchen</span> badge means the food is still being prepared.
+        <br><small class="text-muted"><i class="bi bi-arrow-clockwise"></i> This page auto-refreshes every 15 seconds.</small>
+    </div>
+
+    <!-- My Assigned Deliveries -->
+    <h4 class="mt-4"><i class="bi bi-person-check"></i> My Deliveries</h4>
+    <div th:if="${#lists.isEmpty(myDeliveries)}" class="alert alert-info">
+        <i class="bi bi-inbox me-1"></i> No deliveries assigned to you yet.
+    </div>
+
+    <table th:unless="${#lists.isEmpty(myDeliveries)}" class="table table-bordered">
+        <thead class="table-dark">
+            <tr>
+                <th>Delivery #</th>
+                <th>Order #</th>
+                <th>Pickup</th>
+                <th>Deliver To</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="d : ${myDeliveries}"
+                th:classappend="${d.status == 'COURIER_ASSIGNED' ? 'row-assigned' : (d.status == 'PICKED_UP' ? 'row-picked-up' : (d.status == 'DELIVERED' ? 'row-delivered' : ''))}">
+                <td th:text="${d.id}">1</td>
+                <td th:text="${d.orderId}">1</td>
+                <td><i class="bi bi-geo-alt text-muted"></i> <span th:text="${d.pickupAddress}">Pickup</span></td>
+                <td><i class="bi bi-house-door text-muted"></i> <span th:text="${d.deliveryAddress}">Address</span></td>
+                <td>
+                    <span class="badge"
+                          th:classappend="${d.status == 'DELIVERED'} ? 'bg-success' : (${d.status == 'PICKED_UP'} ? 'bg-info' : 'bg-primary')"
+                          th:text="${d.status}">Status</span>
+                </td>
+                <td>
+                    <div th:if="${d.status == 'COURIER_ASSIGNED'}">
+                        <form th:if="${readyOrderIds.contains(d.orderId)}"
+                              th:action="@{/courier/deliveries/{id}/pickup(id=${d.id})}" method="post" class="d-inline">
+                            <input type="hidden" name="courierId" th:value="${courier.id}">
+                            <button class="btn btn-info btn-sm"><i class="bi bi-box-seam"></i> Pick Up</button>
+                        </form>
+                        <span th:unless="${readyOrderIds.contains(d.orderId)}" class="badge bg-secondary">
+                            <i class="bi bi-hourglass-split"></i> Waiting for Kitchen
+                        </span>
+                    </div>
+                    <form th:if="${d.status == 'PICKED_UP'}"
+                          th:action="@{/courier/deliveries/{id}/deliver(id=${d.id})}" method="post" class="d-inline">
+                        <input type="hidden" name="courierId" th:value="${courier.id}">
+                        <button class="btn btn-success btn-sm"><i class="bi bi-house-door-fill"></i> Deliver</button>
+                    </form>
+                    <span th:if="${d.status == 'DELIVERED'}" class="text-success fw-bold">
+                        <i class="bi bi-check-circle-fill"></i> Done
+                    </span>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- Unassigned Pending Deliveries -->
+    <h4 class="mt-5"><i class="bi bi-hourglass"></i> Pending Deliveries (Unassigned)</h4>
+    <div th:if="${#lists.isEmpty(pendingDeliveries)}" class="alert alert-info">
+        <i class="bi bi-inbox me-1"></i> No pending deliveries at the moment.
+    </div>
+
+    <table th:unless="${#lists.isEmpty(pendingDeliveries)}" class="table table-bordered">
+        <thead class="table-warning">
+            <tr>
+                <th>Delivery #</th>
+                <th>Order #</th>
+                <th>Pickup</th>
+                <th>Deliver To</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="d : ${pendingDeliveries}" class="row-pending">
+                <td th:text="${d.id}">1</td>
+                <td th:text="${d.orderId}">1</td>
+                <td><i class="bi bi-geo-alt text-muted"></i> <span th:text="${d.pickupAddress}">Pickup</span></td>
+                <td><i class="bi bi-house-door text-muted"></i> <span th:text="${d.deliveryAddress}">Address</span></td>
+                <td>
+                    <form th:action="@{/courier/deliveries/{id}/assign(id=${d.id})}" method="post" class="d-inline">
+                        <input type="hidden" name="courierId" th:value="${courier.id}">
+                        <button class="btn btn-primary btn-sm"><i class="bi bi-person-plus"></i> Assign to Me</button>
+                    </form>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <a th:href="@{/courier}" class="btn btn-outline-secondary mt-3"><i class="bi bi-arrow-left"></i> Back to Couriers</a>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

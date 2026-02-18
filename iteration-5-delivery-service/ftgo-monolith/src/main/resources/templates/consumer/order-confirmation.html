@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('FTGO — Order Confirmation')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="container">
+    <div class="text-center mb-4">
+        <div class="display-4 text-success">&#10004;</div>
+        <h2>Order Placed Successfully!</h2>
+    </div>
+
+    <div class="card mx-auto" style="max-width: 600px;">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0"><i class="bi bi-receipt-cutoff"></i> Order #<span th:text="${order.id()}">1</span></h5>
+        </div>
+        <div class="card-body">
+            <table class="table table-sm mb-3">
+                <tr>
+                    <th>Customer</th>
+                    <td th:text="${order.consumerName()}">Name</td>
+                </tr>
+                <tr>
+                    <th>Restaurant</th>
+                    <td th:text="${order.restaurantName()}">Restaurant</td>
+                </tr>
+                <tr>
+                    <th>Delivery To</th>
+                    <td th:text="${order.deliveryAddress()}">Address</td>
+                </tr>
+                <tr>
+                    <th>Status</th>
+                    <td><span class="badge bg-primary" th:text="${order.status()}">Status</span></td>
+                </tr>
+                <tr>
+                    <th>Ordered At</th>
+                    <td th:text="${#temporals.format(order.createdAt(), 'dd MMM yyyy, hh:mm a')}">Time</td>
+                </tr>
+            </table>
+
+            <h6>Items Ordered</h6>
+            <table class="table table-sm">
+                <thead class="table-light">
+                    <tr>
+                        <th>Item</th>
+                        <th class="text-center">Qty</th>
+                        <th class="text-end">Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="item : ${order.items()}">
+                        <td th:text="${item.menuItemName}">Item</td>
+                        <td class="text-center" th:text="${item.quantity}">1</td>
+                        <td class="text-end" th:text="'&#8377; ' + ${#numbers.formatDecimal(item.price, 1, 2)}">Price</td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr class="table-dark">
+                        <th colspan="2">Total</th>
+                        <th class="text-end" th:text="'&#8377; ' + ${#numbers.formatDecimal(order.totalAmount(), 1, 2)}">Total</th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+
+    <!-- What Happens Next -->
+    <div class="card mx-auto mt-4" style="max-width: 600px;">
+        <div class="card-header bg-light">
+            <h5 class="mb-0"><i class="bi bi-signpost-2"></i> What Happens Next</h5>
+        </div>
+        <div class="card-body">
+            <!-- Progress bar -->
+            <div class="progress mb-4" style="height: 8px;">
+                <div class="progress-bar bg-success" style="width: 33%"></div>
+            </div>
+
+            <div class="row text-center g-3">
+                <div class="col-4">
+                    <div class="rounded-circle bg-success text-white d-inline-flex align-items-center justify-content-center mb-2" style="width:48px;height:48px;">
+                        <i class="bi bi-fire fs-5"></i>
+                    </div>
+                    <p class="small fw-bold mb-1">1. Kitchen Prepares</p>
+                    <p class="text-muted small mb-0">The restaurant will accept and cook your order</p>
+                </div>
+                <div class="col-4">
+                    <div class="rounded-circle bg-light text-muted d-inline-flex align-items-center justify-content-center mb-2 border" style="width:48px;height:48px;">
+                        <i class="bi bi-bicycle fs-5"></i>
+                    </div>
+                    <p class="small fw-bold mb-1">2. Courier Picks Up</p>
+                    <p class="text-muted small mb-0">A courier will pick up once the kitchen is ready</p>
+                </div>
+                <div class="col-4">
+                    <div class="rounded-circle bg-light text-muted d-inline-flex align-items-center justify-content-center mb-2 border" style="width:48px;height:48px;">
+                        <i class="bi bi-house-door fs-5"></i>
+                    </div>
+                    <p class="small fw-bold mb-1">3. Delivered</p>
+                    <p class="text-muted small mb-0">Your food arrives at your door</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cross-links for training flow -->
+    <div class="card mx-auto mt-3 border-info" style="max-width: 600px;">
+        <div class="card-body">
+            <p class="mb-2"><i class="bi bi-mortarboard-fill text-info me-1"></i> <strong>Training: follow the order through each role</strong></p>
+            <div class="d-flex gap-2 flex-wrap">
+                <a th:href="@{/restaurant}" class="btn btn-outline-warning btn-sm">
+                    <i class="bi bi-fire"></i> Restaurant Tickets
+                </a>
+                <a th:href="@{/courier}" class="btn btn-outline-success btn-sm">
+                    <i class="bi bi-bicycle"></i> Courier Deliveries
+                </a>
+                <a th:href="@{/consumer/orders}" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-receipt"></i> My Orders
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center mt-4">
+        <a th:href="@{/consumer/restaurants}" class="btn btn-primary"><i class="bi bi-plus-circle"></i> Order More</a>
+        <a th:href="@{/}" class="btn btn-outline-secondary ms-2">Home</a>
+    </div>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>
