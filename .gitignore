@@ -36,3 +36,7 @@ target/
 .settings/
 .project
 .classpath
+
+# Kafka runtime data
+kafka/data/
+kafka/logs/

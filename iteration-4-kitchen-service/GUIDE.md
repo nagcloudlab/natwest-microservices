@@ -209,8 +209,12 @@ Spring Kafka supports both producer and consumer in the same application out of 
 
 ### 1. Start Infrastructure
 ```bash
-# Start Kafka cluster (from project root)
-cd kafka && docker-compose up -d
+# Start Kafka cluster (KRaft mode — no ZooKeeper, no Docker)
+cd kafka && bash start-cluster.sh
+# Brokers: localhost:9092, localhost:9093, localhost:9094
+
+# Stop later with:
+cd kafka && bash stop-cluster.sh
 ```
 
 ### 2. Start All Services
@@ -274,13 +278,60 @@ curl http://localhost:8080/api/orders/1
 curl -X PUT http://localhost:8084/api/kitchen/tickets/1/ready
 ```
 
-**Verify final order status:**
+**Verify order status updated in monolith:**
 ```bash
 curl http://localhost:8080/api/orders/1
 # Should show status: "READY_FOR_PICKUP"
 ```
 
-### 4. Circuit Breaker Test
+**Verify payment was authorized (accounting-service):**
+```bash
+curl http://localhost:8083/api/payments/order/1
+# Should show status: "AUTHORIZED" with a Stripe transaction ID
+```
+
+**Verify SMS notification was sent (notification-service via Kafka):**
+```bash
+curl http://localhost:8082/api/notifications/order/1
+# Should show SMS sent to consumer's phone number
+```
+
+**Assign a courier and complete delivery (monolith):**
+```bash
+# Assign an available courier
+curl -X PUT http://localhost:8080/api/deliveries/1/assign
+
+# Courier picks up the food
+curl -X PUT http://localhost:8080/api/deliveries/1/pickup
+
+# Courier delivers to customer
+curl -X PUT http://localhost:8080/api/deliveries/1/deliver
+```
+
+**Verify final order status:**
+```bash
+curl http://localhost:8080/api/orders/1
+# Should show status: "DELIVERED"
+```
+
+### 4. End-to-End Flow Summary
+
+```
+Step  Service                   Action                         Status
+----  ------------------------  -----------------------------  ----------------
+1     Monolith → Restaurant     Validate restaurant & menu     -
+2     Monolith → Accounting     Authorize payment (REST)       AUTHORIZED
+3     Monolith → Kitchen        Create ticket (REST)           CREATED
+4     Monolith → Notification   Publish order event (Kafka)    SMS sent
+5     Kitchen Service           Accept ticket                  ACCEPTED
+6     Kitchen → Monolith        Start preparing (Kafka event)  PREPARING
+7     Kitchen → Monolith        Mark ready (Kafka event)       READY_FOR_PICKUP
+8     Monolith (Delivery)       Assign courier                 COURIER_ASSIGNED
+9     Monolith (Delivery)       Courier picks up               PICKED_UP
+10    Monolith (Delivery)       Courier delivers               DELIVERED
+```
+
+### 5. Circuit Breaker Test
 ```bash
 # Kill kitchen-service, then try to place an order
 # The circuit breaker should trip and return a clear error
