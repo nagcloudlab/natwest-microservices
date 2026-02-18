@@ -17,10 +17,10 @@
 |   FTGO Monolith    |   REST    |   Kitchen Service   |
 |   (port 8080)      |---------->|   (port 8084, NEW)  |
 |                    |           |   H2: kitchen DB    |
-|   Modules remaining:|           +----------+----------+
+|  Modules remaining:|           +----------+----------+
 |   - Order          |                      |
 |   - Delivery       |    Kafka:            |
-|                    |    kitchen-events     |
+|                    |    kitchen-events    |
 |   H2: ftgo DB      |<--------------------+
 |   (order, delivery,|
 |    courier)        |
