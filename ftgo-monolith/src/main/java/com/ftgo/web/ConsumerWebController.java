@@ -65,7 +65,7 @@ public class ConsumerWebController {
             }
 
             CreateOrderRequest request = new CreateOrderRequest(
-                    System.currentTimeMillis() % 10000, // simple consumer ID
+                    1L, // default seed consumer
                     consumerName,
                     consumerContact,
                     restaurantId,

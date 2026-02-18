@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('FTGO — Kitchen Tickets')}"></head>
+<body>
+<!-- Auto-refresh every 15 seconds -->
+<meta http-equiv="refresh" content="15">
+
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<div class="container">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a th:href="@{/restaurant}"><i class="bi bi-fire"></i> Restaurants</a></li>
+            <li class="breadcrumb-item active" th:text="${restaurant.name}">Restaurant</li>
+        </ol>
+    </nav>
+
+    <h2 class="mb-1"><i class="bi bi-ticket-perforated"></i> <span th:text="${restaurant.name}">Name</span> — Kitchen Tickets</h2>
+    <p class="text-muted mb-3"><i class="bi bi-geo-alt"></i> <span th:text="${restaurant.address}">Address</span></p>
+
+    <!-- Progress stepper -->
+    <div class="stepper">
+        <div class="stepper-step">
+            <div class="step-circle">1</div>
+            <span class="step-label">CREATED</span>
+        </div>
+        <div class="stepper-connector"></div>
+        <div class="stepper-step">
+            <div class="step-circle">2</div>
+            <span class="step-label">ACCEPTED</span>
+        </div>
+        <div class="stepper-connector"></div>
+        <div class="stepper-step">
+            <div class="step-circle">3</div>
+            <span class="step-label">PREPARING</span>
+        </div>
+        <div class="stepper-connector"></div>
+        <div class="stepper-step">
+            <div class="step-circle">4</div>
+            <span class="step-label">READY FOR PICKUP</span>
+        </div>
+    </div>
+
+    <!-- Workflow guide -->
+    <div class="workflow-guide restaurant-guide">
+        <i class="bi bi-info-circle-fill me-1"></i>
+        <strong>Workflow:</strong>
+        New orders arrive as <span class="badge bg-warning text-dark">CREATED</span>.
+        Click <strong>Accept</strong> to acknowledge,
+        <strong>Start Preparing</strong> when cooking begins,
+        then <strong>Mark Ready</strong> when food is ready for courier pickup.
+        <br><small class="text-muted"><i class="bi bi-arrow-clockwise"></i> This page auto-refreshes every 15 seconds.</small>
+    </div>
+
+    <div th:if="${#lists.isEmpty(tickets)}" class="alert alert-info">
+        <i class="bi bi-inbox me-1"></i>
+        No kitchen tickets yet. Orders will appear here once consumers place them.
+    </div>
+
+    <table th:unless="${#lists.isEmpty(tickets)}" class="table table-bordered">
+        <thead class="table-dark">
+            <tr>
+                <th>Ticket #</th>
+                <th>Order #</th>
+                <th>Items</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="t : ${tickets}"
+                th:classappend="${t.status == 'CREATED' ? 'row-created' : (t.status == 'ACCEPTED' ? 'row-accepted' : (t.status == 'PREPARING' ? 'row-preparing' : (t.status == 'READY_FOR_PICKUP' ? 'row-ready' : '')))}">
+                <td th:text="${t.id}">1</td>
+                <td th:text="${t.orderId}">1</td>
+                <td th:text="${t.items}">Items</td>
+                <td>
+                    <span class="badge"
+                          th:classappend="${t.status == 'READY_FOR_PICKUP'} ? 'bg-success' : (${t.status == 'PREPARING'} ? 'bg-info' : (${t.status == 'ACCEPTED'} ? 'bg-primary' : 'bg-warning text-dark'))"
+                          th:text="${t.status}">Status</span>
+                </td>
+                <td th:text="${#temporals.format(t.createdAt, 'dd MMM, hh:mm a')}">Time</td>
+                <td>
+                    <form th:if="${t.status == 'CREATED'}"
+                          th:action="@{/restaurant/tickets/{id}/accept(id=${t.id})}" method="post" class="d-inline">
+                        <input type="hidden" name="restaurantId" th:value="${restaurant.id}">
+                        <button class="btn btn-primary btn-sm"><i class="bi bi-check-lg"></i> Accept</button>
+                    </form>
+                    <form th:if="${t.status == 'ACCEPTED'}"
+                          th:action="@{/restaurant/tickets/{id}/preparing(id=${t.id})}" method="post" class="d-inline">
+                        <input type="hidden" name="restaurantId" th:value="${restaurant.id}">
+                        <button class="btn btn-info btn-sm"><i class="bi bi-fire"></i> Start Preparing</button>
+                    </form>
+                    <form th:if="${t.status == 'PREPARING'}"
+                          th:action="@{/restaurant/tickets/{id}/ready(id=${t.id})}" method="post" class="d-inline">
+                        <input type="hidden" name="restaurantId" th:value="${restaurant.id}">
+                        <button class="btn btn-success btn-sm"><i class="bi bi-check-circle"></i> Mark Ready</button>
+                    </form>
+                    <span th:if="${t.status == 'READY_FOR_PICKUP'}" class="text-success fw-bold">
+                        <i class="bi bi-check-circle-fill"></i> Ready!
+                    </span>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <a th:href="@{/restaurant}" class="btn btn-outline-secondary mt-3"><i class="bi bi-arrow-left"></i> Back to Restaurants</a>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

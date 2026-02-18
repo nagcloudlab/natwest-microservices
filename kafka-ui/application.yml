@@ -1,0 +1,7 @@
+server:
+  port: 8090
+
+kafka:
+  clusters:
+    - name: local-cluster
+      bootstrapServers: localhost:9092,localhost:9093,localhost:9094

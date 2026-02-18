@@ -1,0 +1,2 @@
+[2026-02-17 22:32:10,967] INFO [QuorumController id=2] Replaying ProducerIdsRecord ProducerIdsRecord(brokerId=2, brokerEpoch=9336, nextProducerId=4000) (org.apache.kafka.controller.ProducerIdControlManager)
+[2026-02-17 22:39:11,258] INFO [QuorumController id=2] Replaying ProducerIdsRecord ProducerIdsRecord(brokerId=0, brokerEpoch=9506, nextProducerId=5000) (org.apache.kafka.controller.ProducerIdControlManager)
