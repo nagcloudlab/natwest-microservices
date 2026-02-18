@@ -63,7 +63,7 @@ export interface Restaurant {
   name: string;
   address: string;
   phone: string;
-  isOpen: boolean;
+  open: boolean;
   menuItems: MenuItem[];
 }
 

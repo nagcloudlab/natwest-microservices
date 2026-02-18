@@ -13,10 +13,10 @@ export default function RestaurantCard({ restaurant }: { restaurant: Restaurant 
           </div>
           <span
             className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-              restaurant.isOpen ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+              restaurant.open ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
             }`}
           >
-            {restaurant.isOpen ? "Open" : "Closed"}
+            {restaurant.open ? "Open" : "Closed"}
           </span>
         </div>
         <div className="mt-4 flex items-center justify-between">
