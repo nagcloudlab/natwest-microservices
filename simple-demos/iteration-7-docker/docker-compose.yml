@@ -1,0 +1,28 @@
+services:
+
+  # ============================================================
+  # GREETING SERVICE — port 9001 (no dependencies)
+  # ============================================================
+  greeting-service:
+    build: ./greeting-service
+    ports:
+      - "9001:9001"
+    healthcheck:
+      test: wget --quiet --tries=1 --spider http://localhost:9001/actuator/health || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ============================================================
+  # TIME SERVICE — port 9002 (calls greeting-service)
+  # ============================================================
+  time-service:
+    build: ./time-service
+    ports:
+      - "9002:9002"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      greeting-service:
+        condition: service_healthy
