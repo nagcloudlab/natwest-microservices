@@ -1,0 +1,324 @@
+services:
+
+  # ============================================================
+  # KAFKA — Single-broker KRaft mode (no ZooKeeper)
+  # ============================================================
+  kafka:
+    image: apache/kafka:3.7.0
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      CLUSTER_ID: docker-kafka-cluster-id-01
+    healthcheck:
+      test: /opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================================
+  # EUREKA SERVER — Service Registry (port 8761)
+  # ============================================================
+  eureka-server:
+    build: ./eureka-server
+    ports:
+      - "8761:8761"
+    healthcheck:
+      test: curl -f http://localhost:8761/actuator/health || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # ============================================================
+  # CONFIG SERVER — Spring Cloud Config (port 8888)
+  # ============================================================
+  config-server:
+    build: ./config-server
+    ports:
+      - "8888:8888"
+    environment:
+      SPRING_PROFILES_ACTIVE: native,docker
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+    healthcheck:
+      test: curl -f http://localhost:8888/actuator/health || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # ============================================================
+  # OTEL COLLECTOR — Receives traces/metrics/logs via OTLP,
+  # exports to Tempo, Prometheus, and Loki
+  # ============================================================
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.114.0
+    command: ["--config=/etc/otelcol/config.yaml"]
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otelcol/config.yaml:ro
+    ports:
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+      - "8889:8889"   # Prometheus exporter
+    depends_on:
+      - tempo
+      - loki
+
+  # ============================================================
+  # TEMPO — Distributed tracing backend (port 3200)
+  # UI: via Grafana → Explore → Tempo
+  # ============================================================
+  tempo:
+    image: grafana/tempo:2.6.1
+    command: ["-config.file=/etc/tempo/config.yaml"]
+    volumes:
+      - ./tempo-config.yaml:/etc/tempo/config.yaml:ro
+      - tempo-data:/var/tempo
+    ports:
+      - "3200:3200"   # Tempo HTTP API
+
+  # ============================================================
+  # LOKI — Log aggregation backend (port 3100)
+  # UI: via Grafana → Explore → Loki
+  # ============================================================
+  loki:
+    image: grafana/loki:3.3.2
+    command: ["-config.file=/etc/loki/config.yaml"]
+    volumes:
+      - ./loki-config.yaml:/etc/loki/config.yaml:ro
+      - loki-data:/loki
+    ports:
+      - "3100:3100"
+
+  # ============================================================
+  # PROMETHEUS — Metrics store (port 9090)
+  # Scrapes the OTEL Collector's Prometheus exporter endpoint
+  # UI: http://localhost:9090
+  # ============================================================
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.enable-remote-write-receiver"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+
+  # ============================================================
+  # GRAFANA — Unified observability dashboard (port 3001)
+  # Pre-configured with Tempo, Prometheus, and Loki datasources
+  # Login: admin / admin
+  # ============================================================
+  grafana:
+    image: grafana/grafana:11.4.0
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - grafana-data:/var/lib/grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
+    ports:
+      - "3001:3000"   # 3001 to avoid conflict with ftgo-web on 3000
+    depends_on:
+      - prometheus
+      - tempo
+      - loki
+
+  # ============================================================
+  # RESTAURANT SERVICE — port 8081
+  # ============================================================
+  restaurant-service:
+    build: ./restaurant-service
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+      OTEL_SERVICE_NAME: restaurant-service
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_LOGS_EXPORTER: otlp
+      OTEL_METRICS_EXPORTER: otlp
+      OTEL_TRACES_EXPORTER: otlp
+      OTEL_RESOURCE_ATTRIBUTES: service.namespace=ftgo
+    depends_on:
+      config-server:
+        condition: service_healthy
+      otel-collector:
+        condition: service_started
+
+  # ============================================================
+  # ACCOUNTING SERVICE — port 8083
+  # ============================================================
+  accounting-service:
+    build: ./accounting-service
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+      OTEL_SERVICE_NAME: accounting-service
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_LOGS_EXPORTER: otlp
+      OTEL_METRICS_EXPORTER: otlp
+      OTEL_TRACES_EXPORTER: otlp
+      OTEL_RESOURCE_ATTRIBUTES: service.namespace=ftgo
+    depends_on:
+      config-server:
+        condition: service_healthy
+      otel-collector:
+        condition: service_started
+
+  # ============================================================
+  # KITCHEN SERVICE — port 8084 (Kafka producer)
+  # ============================================================
+  kitchen-service:
+    build: ./kitchen-service
+    ports:
+      - "8084:8084"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+      OTEL_SERVICE_NAME: kitchen-service
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_LOGS_EXPORTER: otlp
+      OTEL_METRICS_EXPORTER: otlp
+      OTEL_TRACES_EXPORTER: otlp
+      OTEL_RESOURCE_ATTRIBUTES: service.namespace=ftgo
+    depends_on:
+      kafka:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      otel-collector:
+        condition: service_started
+
+  # ============================================================
+  # NOTIFICATION SERVICE — port 8082 (Kafka consumer)
+  # ============================================================
+  notification-service:
+    build: ./notification-service
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+      OTEL_SERVICE_NAME: notification-service
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_LOGS_EXPORTER: otlp
+      OTEL_METRICS_EXPORTER: otlp
+      OTEL_TRACES_EXPORTER: otlp
+      OTEL_RESOURCE_ATTRIBUTES: service.namespace=ftgo
+    depends_on:
+      kafka:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      otel-collector:
+        condition: service_started
+
+  # ============================================================
+  # DELIVERY SERVICE — port 8085 (Kafka producer, calls kitchen-service)
+  # ============================================================
+  delivery-service:
+    build: ./delivery-service
+    ports:
+      - "8085:8085"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+      OTEL_SERVICE_NAME: delivery-service
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_LOGS_EXPORTER: otlp
+      OTEL_METRICS_EXPORTER: otlp
+      OTEL_TRACES_EXPORTER: otlp
+      OTEL_RESOURCE_ATTRIBUTES: service.namespace=ftgo
+    depends_on:
+      kafka:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      otel-collector:
+        condition: service_started
+
+  # ============================================================
+  # ORDER SERVICE — port 8080 (orchestrator, calls all services)
+  # ============================================================
+  order-service:
+    build: ./order-service
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+      OTEL_SERVICE_NAME: order-service
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_LOGS_EXPORTER: otlp
+      OTEL_METRICS_EXPORTER: otlp
+      OTEL_TRACES_EXPORTER: otlp
+      OTEL_RESOURCE_ATTRIBUTES: service.namespace=ftgo
+    depends_on:
+      kafka:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      otel-collector:
+        condition: service_started
+
+  # ============================================================
+  # API GATEWAY — Spring Cloud Gateway (port 8090)
+  # ============================================================
+  api-gateway:
+    build: ./api-gateway
+    ports:
+      - "8090:8090"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+      OTEL_SERVICE_NAME: api-gateway
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_LOGS_EXPORTER: otlp
+      OTEL_METRICS_EXPORTER: otlp
+      OTEL_TRACES_EXPORTER: otlp
+      OTEL_RESOURCE_ATTRIBUTES: service.namespace=ftgo
+    depends_on:
+      config-server:
+        condition: service_healthy
+      otel-collector:
+        condition: service_started
+
+  # ============================================================
+  # FTGO-WEB — Next.js SPA (port 3000)
+  # ============================================================
+  ftgo-web:
+    build: ./ftgo-web
+    ports:
+      - "3000:3000"
+    environment:
+      API_GATEWAY_URL: http://api-gateway:8090
+    depends_on:
+      - api-gateway
+
+volumes:
+  tempo-data:
+  loki-data:
+  prometheus-data:
+  grafana-data:

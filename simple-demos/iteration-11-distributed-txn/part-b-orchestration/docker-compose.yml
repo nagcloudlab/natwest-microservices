@@ -1,0 +1,50 @@
+services:
+
+  # ============================================================
+  # INVENTORY SERVICE — port 9004 (reserve + release inventory)
+  # ============================================================
+  inventory-service:
+    build: ./inventory-service
+    ports:
+      - "9004:9004"
+    healthcheck:
+      test: wget --quiet --tries=1 --spider http://localhost:9004/actuator/health || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ============================================================
+  # PAYMENT SERVICE — port 9005 (process + refund payments)
+  # ============================================================
+  payment-service:
+    build: ./payment-service
+    ports:
+      - "9005:9005"
+    healthcheck:
+      test: wget --quiet --tries=1 --spider http://localhost:9005/actuator/health || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ============================================================
+  # ORDER SERVICE — port 9003 (saga orchestrator)
+  # ============================================================
+  order-service:
+    build: ./order-service
+    ports:
+      - "9003:9003"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      inventory-service:
+        condition: service_healthy
+      payment-service:
+        condition: service_healthy
+    healthcheck:
+      test: wget --quiet --tries=1 --spider http://localhost:9003/actuator/health || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
