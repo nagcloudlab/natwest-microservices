@@ -1,0 +1,78 @@
+services:
+
+  # ============================================================
+  # KEYCLOAK — Identity Provider (port 8180 on host, 8080 internal)
+  # ============================================================
+  keycloak:
+    image: quay.io/keycloak/keycloak:23.0.4
+    command: start-dev --import-realm --health-enabled=true
+    ports:
+      - "8180:8080"
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    volumes:
+      - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
+    healthcheck:
+      test: ["CMD-SHELL", "cat < /dev/null > /dev/tcp/localhost/8080"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+
+  # ============================================================
+  # GREETING SERVICE — port 9001 (OAuth2 Resource Server)
+  # ============================================================
+  greeting-service:
+    build: ./greeting-service
+    ports:
+      - "9001:9001"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    healthcheck:
+      test: wget --quiet --tries=1 --spider http://localhost:9001/actuator/health || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ============================================================
+  # TIME SERVICE — port 9002 (OAuth2 Resource Server + token propagation)
+  # ============================================================
+  time-service:
+    build: ./time-service
+    ports:
+      - "9002:9002"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      keycloak:
+        condition: service_healthy
+      greeting-service:
+        condition: service_healthy
+    healthcheck:
+      test: wget --quiet --tries=1 --spider http://localhost:9002/actuator/health || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ============================================================
+  # API GATEWAY — port 9000 (OAuth2 Resource Server + TokenRelay)
+  # ============================================================
+  api-gateway:
+    build: ./api-gateway
+    ports:
+      - "9000:9000"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      keycloak:
+        condition: service_healthy
+      greeting-service:
+        condition: service_healthy
+      time-service:
+        condition: service_healthy
