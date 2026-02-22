@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { restaurantsApi, type Restaurant } from "@/lib/api";
 import RestaurantCard from "@/components/RestaurantCard";
 
@@ -22,7 +23,15 @@ export default function RestaurantsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Browse Restaurants</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">Browse Restaurants</h1>
+        <Link
+          href="/consumer/orders"
+          className="bg-orange-500 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-orange-600 transition-colors"
+        >
+          My Orders
+        </Link>
+      </div>
       {restaurants.length === 0 ? (
         <p className="text-gray-500">No restaurants available. Make sure restaurant-service is running on port 8081.</p>
       ) : (
