@@ -1,0 +1,217 @@
+{
+  "realm": "ftgo",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "roles": {
+    "realm": [
+      {
+        "name": "ROLE_CONSUMER",
+        "description": "Consumer role — can place and track orders"
+      },
+      {
+        "name": "ROLE_RESTAURANT",
+        "description": "Restaurant role — can manage menus and kitchen tickets"
+      },
+      {
+        "name": "ROLE_COURIER",
+        "description": "Courier role — can manage deliveries"
+      },
+      {
+        "name": "ROLE_ADMIN",
+        "description": "Administrator role — full access to all services"
+      }
+    ]
+  },
+  "scopeMappings": [
+    {
+      "client": "ftgo-gateway",
+      "roles": ["ROLE_CONSUMER", "ROLE_RESTAURANT", "ROLE_COURIER", "ROLE_ADMIN"]
+    },
+    {
+      "client": "ftgo-app",
+      "roles": ["ROLE_CONSUMER", "ROLE_RESTAURANT", "ROLE_COURIER", "ROLE_ADMIN"]
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "ftgo-gateway",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "gateway-secret",
+      "redirectUris": ["http://localhost:8090/*"],
+      "webOrigins": ["http://localhost:8090"],
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "protocol": "openid-connect",
+      "fullScopeAllowed": true,
+      "protocolMappers": [
+        {
+          "name": "username",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-property-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "user.attribute": "username",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "preferred_username",
+            "jsonType.label": "String"
+          }
+        },
+        {
+          "name": "email",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-property-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "user.attribute": "email",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "email",
+            "jsonType.label": "String"
+          }
+        },
+        {
+          "name": "realm roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "multivalued": "true",
+            "userinfo.token.claim": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "realm_access.roles",
+            "jsonType.label": "String"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "ftgo-app",
+      "enabled": true,
+      "publicClient": true,
+      "redirectUris": ["*"],
+      "webOrigins": ["*"],
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "protocol": "openid-connect",
+      "fullScopeAllowed": true,
+      "protocolMappers": [
+        {
+          "name": "username",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-property-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "user.attribute": "username",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "preferred_username",
+            "jsonType.label": "String"
+          }
+        },
+        {
+          "name": "email",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-property-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "user.attribute": "email",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "email",
+            "jsonType.label": "String"
+          }
+        },
+        {
+          "name": "realm roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "multivalued": "true",
+            "userinfo.token.claim": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "realm_access.roles",
+            "jsonType.label": "String"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "consumer",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "consumer@ftgo.com",
+      "firstName": "Demo",
+      "lastName": "Consumer",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["ROLE_CONSUMER"]
+    },
+    {
+      "username": "restaurant",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "restaurant@ftgo.com",
+      "firstName": "Demo",
+      "lastName": "Restaurant",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["ROLE_RESTAURANT"]
+    },
+    {
+      "username": "courier",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "courier@ftgo.com",
+      "firstName": "Demo",
+      "lastName": "Courier",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["ROLE_COURIER"]
+    },
+    {
+      "username": "admin",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "admin@ftgo.com",
+      "firstName": "Demo",
+      "lastName": "Admin",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["ROLE_CONSUMER", "ROLE_RESTAURANT", "ROLE_COURIER", "ROLE_ADMIN"]
+    }
+  ]
+}

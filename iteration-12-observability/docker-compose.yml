@@ -137,6 +137,25 @@ services:
       - loki
 
   # ============================================================
+  # KEYCLOAK — Identity & Access Management (port 8180)
+  # ============================================================
+  keycloak:
+    image: quay.io/keycloak/keycloak:23.0.4
+    command: start-dev --import-realm --health-enabled=true
+    ports:
+      - "8180:8080"
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    volumes:
+      - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/8080 && echo -e 'GET /health/ready HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n' >&3 && cat <&3 | grep -q '200 OK'"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+
+  # ============================================================
   # RESTAURANT SERVICE — port 8081
   # ============================================================
   restaurant-service:
@@ -302,6 +321,8 @@ services:
     depends_on:
       config-server:
         condition: service_healthy
+      keycloak:
+        condition: service_healthy
       otel-collector:
         condition: service_started
 
@@ -314,6 +335,7 @@ services:
       - "3000:3000"
     environment:
       API_GATEWAY_URL: http://api-gateway:8090
+      KEYCLOAK_URL: http://keycloak:8080
     depends_on:
       - api-gateway
 

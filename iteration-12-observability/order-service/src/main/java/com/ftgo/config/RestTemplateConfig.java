@@ -14,23 +14,21 @@ import org.springframework.web.client.RestTemplate;
  * registry instead of DNS. This is CLIENT-SIDE load balancing — the caller
  * picks the target instance, not a central proxy.
  *
- * Before (Iteration 8): Each service client created its own RestTemplate with
- * a hardcoded URL from @Value("${restaurant-service.url}"). Four clients =
- * four RestTemplates = four hardcoded URLs.
- *
- * After (Iteration 9): One shared @LoadBalanced RestTemplate bean. URLs use
- * Eureka service names (http://restaurant-service/...) with no port numbers.
- * Eureka resolves the service name to an actual host:port at runtime.
+ * The TokenPropagationInterceptor forwards the incoming JWT Authorization
+ * header to downstream service calls, enabling token propagation across
+ * the microservice mesh.
  */
 @Configuration
 public class RestTemplateConfig {
 
     @Bean
     @LoadBalanced
-    public RestTemplate restTemplate() {
+    public RestTemplate restTemplate(TokenPropagationInterceptor tokenInterceptor) {
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
         factory.setConnectTimeout(2000);
         factory.setReadTimeout(3000);
-        return new RestTemplate(factory);
+        RestTemplate restTemplate = new RestTemplate(factory);
+        restTemplate.getInterceptors().add(tokenInterceptor);
+        return restTemplate;
     }
 }

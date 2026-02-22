@@ -1,12 +1,10 @@
-import { getServiceUrl, proxyRequest } from "@/lib/proxy";
+import { getServiceUrl, proxyGet, proxyRequest } from "@/lib/proxy";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   const url = `${getServiceUrl("orders")}/api/orders`;
-  const res = await fetch(url, { cache: "no-store" });
-  const data = await res.text();
-  return new Response(data, { status: res.status, headers: { "Content-Type": "application/json" } });
+  return proxyGet(url);
 }
 
 export async function POST(request: Request) {

@@ -11,16 +11,21 @@ import org.springframework.web.client.RestTemplate;
  *
  * @LoadBalanced tells Spring to resolve hostnames (e.g., "http://kitchen-service/...")
  * via the Eureka registry instead of DNS. This is CLIENT-SIDE load balancing.
+ *
+ * The TokenPropagationInterceptor forwards the incoming JWT Authorization
+ * header to downstream service calls (delivery-service → kitchen-service).
  */
 @Configuration
 public class RestTemplateConfig {
 
     @Bean
     @LoadBalanced
-    public RestTemplate restTemplate() {
+    public RestTemplate restTemplate(TokenPropagationInterceptor tokenInterceptor) {
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
         factory.setConnectTimeout(2000);
         factory.setReadTimeout(3000);
-        return new RestTemplate(factory);
+        RestTemplate restTemplate = new RestTemplate(factory);
+        restTemplate.getInterceptors().add(tokenInterceptor);
+        return restTemplate;
     }
 }
