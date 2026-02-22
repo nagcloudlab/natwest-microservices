@@ -38,5 +38,5 @@ target/
 .classpath
 
 # Kafka runtime data
-kafka/data/
-kafka/logs/
+**/kafka/data/
+**/kafka/logs/
