@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-time-to-greeting
+  namespace: demo
+spec:
+  podSelector:
+    matchLabels:
+      app: greeting-service
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: time-service
+      ports:
+        - port: 9001
+          protocol: TCP

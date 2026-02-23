@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-time-egress
+  namespace: demo
+spec:
+  podSelector:
+    matchLabels:
+      app: time-service
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: greeting-service
+      ports:
+        - port: 9001
+          protocol: TCP

@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: greeting-green
+  namespace: demo
+  labels:
+    app: greeting-service
+    version: green
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: greeting-service
+      version: green
+  template:
+    metadata:
+      labels:
+        app: greeting-service
+        version: green
+    spec:
+      containers:
+        - name: greeting-service
+          image: greeting-service:v2
+          ports:
+            - containerPort: 9001
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 9001
+            initialDelaySeconds: 15
+            periodSeconds: 5

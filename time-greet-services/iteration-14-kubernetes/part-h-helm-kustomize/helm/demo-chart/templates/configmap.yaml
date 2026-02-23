@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: greeting-config
+  namespace: {{ .Values.namespace }}
+data:
+  GREETING_MESSAGE: {{ .Values.greeting.message | quote }}

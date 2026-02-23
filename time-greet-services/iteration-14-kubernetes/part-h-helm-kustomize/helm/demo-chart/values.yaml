@@ -1,0 +1,21 @@
+greeting:
+  replicaCount: 1
+  image:
+    repository: greeting-service
+    tag: "1.0.0"
+  message: "Hello from Greeting Service!"
+  service:
+    type: ClusterIP
+    port: 9001
+
+time:
+  replicaCount: 1
+  image:
+    repository: time-service
+    tag: "1.0.0"
+  service:
+    type: NodePort
+    port: 9002
+    nodePort: 30002
+
+namespace: demo

@@ -1,0 +1,8 @@
+greeting:
+  replicaCount: 1
+  message: "Hello from DEV!"
+
+time:
+  replicaCount: 1
+
+namespace: dev

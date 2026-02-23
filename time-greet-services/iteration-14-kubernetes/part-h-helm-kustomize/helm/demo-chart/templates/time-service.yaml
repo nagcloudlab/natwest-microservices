@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: time-service
+  namespace: {{ .Values.namespace }}
+spec:
+  type: {{ .Values.time.service.type }}
+  selector:
+    app: time-service
+  ports:
+    - port: {{ .Values.time.service.port }}
+      targetPort: 9002
+      {{- if eq .Values.time.service.type "NodePort" }}
+      nodePort: {{ .Values.time.service.nodePort }}
+      {{- end }}

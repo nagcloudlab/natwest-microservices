@@ -1,0 +1,36 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: dev
+
+resources:
+  - ../../base
+
+patches:
+  - target:
+      kind: Namespace
+      name: demo
+    patch: |
+      - op: replace
+        path: /metadata/name
+        value: dev
+  - target:
+      kind: Deployment
+      name: greeting-service
+    patch: |
+      - op: replace
+        path: /spec/replicas
+        value: 1
+      - op: replace
+        path: /spec/template/spec/containers/0/env/0/value
+        value: "Hello from DEV!"
+  - target:
+      kind: Deployment
+      name: time-service
+    patch: |
+      - op: replace
+        path: /spec/replicas
+        value: 1
+
+commonLabels:
+  environment: dev

@@ -1,0 +1,15 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-external-to-time
+  namespace: demo
+spec:
+  podSelector:
+    matchLabels:
+      app: time-service
+  policyTypes:
+    - Ingress
+  ingress:
+    - ports:
+        - port: 9002
+          protocol: TCP

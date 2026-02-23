@@ -1,0 +1,21 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: curl-greeting
+  namespace: demo
+spec:
+  template:
+    spec:
+      containers:
+        - name: curl
+          image: curlimages/curl:8.5.0
+          command:
+            - sh
+            - -c
+            - |
+              echo "=== Calling greeting-service ==="
+              curl -s http://greeting-service:9001/greeting
+              echo ""
+              echo "=== Done ==="
+      restartPolicy: Never
+  backoffLimit: 3

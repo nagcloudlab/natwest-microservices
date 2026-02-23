@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: greeting-service
+  namespace: demo
+spec:
+  type: ClusterIP
+  selector:
+    app: greeting-service
+  ports:
+    - port: 9001
+      targetPort: 9001

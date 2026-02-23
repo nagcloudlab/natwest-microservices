@@ -1,0 +1,8 @@
+greeting:
+  replicaCount: 3
+  message: "Hello from PROD!"
+
+time:
+  replicaCount: 2
+
+namespace: prod

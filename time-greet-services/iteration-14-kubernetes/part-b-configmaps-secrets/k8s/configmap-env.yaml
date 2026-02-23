@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: greeting-config
+  namespace: demo
+data:
+  GREETING_MESSAGE: "Hello from ConfigMap!"

@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: greeting-service
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: greeting-service
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+spec:
+  replicas: {{ .Values.greeting.replicaCount }}
+  selector:
+    matchLabels:
+      app: greeting-service
+  template:
+    metadata:
+      labels:
+        app: greeting-service
+    spec:
+      containers:
+        - name: greeting-service
+          image: "{{ .Values.greeting.image.repository }}:{{ .Values.greeting.image.tag }}"
+          ports:
+            - containerPort: 9001
+          env:
+            - name: GREETING_MESSAGE
+              valueFrom:
+                configMapKeyRef:
+                  name: greeting-config
+                  key: GREETING_MESSAGE
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 9001
+            initialDelaySeconds: 15
+            periodSeconds: 5

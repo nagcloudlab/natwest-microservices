@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: time-service
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: time-service
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+spec:
+  replicas: {{ .Values.time.replicaCount }}
+  selector:
+    matchLabels:
+      app: time-service
+  template:
+    metadata:
+      labels:
+        app: time-service
+    spec:
+      containers:
+        - name: time-service
+          image: "{{ .Values.time.image.repository }}:{{ .Values.time.image.tag }}"
+          ports:
+            - containerPort: 9002
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 9002
+            initialDelaySeconds: 15
+            periodSeconds: 5

@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: greeting-stable
+  namespace: demo
+  labels:
+    app: greeting-service
+    track: stable
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: greeting-service
+      track: stable
+  template:
+    metadata:
+      labels:
+        app: greeting-service
+        track: stable
+    spec:
+      containers:
+        - name: greeting-service
+          image: greeting-service:v1
+          ports:
+            - containerPort: 9001
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 9001
+            initialDelaySeconds: 15
+            periodSeconds: 5
