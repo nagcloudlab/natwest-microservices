@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package greeting;
+
+option java_package = "com.demo.greeting.grpc.proto";
+option java_outer_classname = "GreetingProto";
+
+service GreetingService {
+    rpc GetGreeting (GreetingRequest) returns (GreetingResponse);
+}
+
+message GreetingRequest {}
+
+message GreetingResponse {
+    string message = 1;
+    string host = 2;
+}

@@ -1,0 +1,36 @@
+# Stage 1: Copy Maven from the official Maven image
+FROM maven:3.9-eclipse-temurin-17 AS maven-source
+
+# Stage 2: Build the native image using GraalVM
+FROM ghcr.io/graalvm/native-image-community:17 AS build
+WORKDIR /app
+
+# Copy Maven from the maven-source stage (GraalVM image doesn't include Maven)
+COPY --from=maven-source /usr/share/maven /usr/share/maven
+ENV PATH="/usr/share/maven/bin:${PATH}"
+
+# Download dependencies first (layer caching)
+COPY pom.xml .
+RUN mvn dependency:go-offline -B
+
+# Copy source and build native image
+# -Pnative activates the native profile in pom.xml
+# native:compile invokes the GraalVM native-image compiler
+COPY src ./src
+RUN mvn -Pnative native:compile -DskipTests -B
+
+# Stage 3: Minimal runtime image — no JVM needed
+# Using debian:bookworm-slim (not Alpine) for glibc compatibility
+FROM debian:bookworm-slim
+WORKDIR /app
+
+# Install minimal runtime dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libz-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy the native binary from the build stage
+COPY --from=build /app/target/greeting-service /app/greeting-service
+
+EXPOSE 9001
+ENTRYPOINT ["/app/greeting-service"]

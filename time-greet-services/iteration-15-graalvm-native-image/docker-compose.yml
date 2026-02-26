@@ -1,0 +1,26 @@
+services:
+  greeting-jvm:
+    build:
+      context: ./greeting-service
+      dockerfile: Dockerfile.jvm
+    ports:
+      - "9001:9001"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9001/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  greeting-native:
+    build:
+      context: ./greeting-service
+      dockerfile: Dockerfile.native
+    ports:
+      - "9002:9001"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9001/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s

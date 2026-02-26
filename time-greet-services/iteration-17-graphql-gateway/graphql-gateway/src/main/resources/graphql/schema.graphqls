@@ -1,0 +1,27 @@
+type Query {
+    greeting: Greeting
+    time: Time
+    combined: Combined
+}
+
+type Greeting {
+    message: String!
+    host: String!
+}
+
+type Time {
+    currentTime: String!
+    host: String!
+}
+
+type Combined {
+    greeting: Greeting!
+    time: Time!
+    fetchedIn: FetchTiming!
+}
+
+type FetchTiming {
+    greetingMs: Int!
+    timeMs: Int!
+    totalMs: Int!
+}

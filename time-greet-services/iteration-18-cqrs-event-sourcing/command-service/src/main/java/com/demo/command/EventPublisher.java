@@ -1,4 +1,4 @@
-package com.demo.payment.event;
+package com.demo.command;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -12,6 +12,7 @@ import java.util.Map;
 public class EventPublisher {
 
     private static final Logger log = LoggerFactory.getLogger(EventPublisher.class);
+    private static final String TOPIC = "greeting-events";
 
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -20,13 +21,11 @@ public class EventPublisher {
         this.kafkaTemplate = kafkaTemplate;
     }
 
-    public void publish(String topic, String key, String eventType, Long orderId) {
+    public void publish(String key, Map<String, Object> event) {
         try {
-            String payload = objectMapper.writeValueAsString(Map.of(
-                    "eventType", eventType,
-                    "orderId", orderId));
-            kafkaTemplate.send(topic, key, payload);
-            log.info("Published {} to {} [key={}]", eventType, topic, key);
+            String payload = objectMapper.writeValueAsString(event);
+            kafkaTemplate.send(TOPIC, key, payload);
+            log.info("Published {} to {} [key={}]", event.get("eventType"), TOPIC, key);
         } catch (Exception e) {
             log.error("Failed to publish event: {}", e.getMessage());
         }
