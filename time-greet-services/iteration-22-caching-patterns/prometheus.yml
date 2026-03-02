@@ -1,0 +1,13 @@
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  - job_name: greeting-service
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["greeting-service:9001"]
+
+  - job_name: time-service
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["time-service:9002"]
