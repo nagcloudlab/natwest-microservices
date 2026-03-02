@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <!-- ===== Docker profile: structured JSON logs ===== -->
+    <springProfile name="docker">
+        <appender name="JSON" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+                <includeMdcKeyName>traceId</includeMdcKeyName>
+                <includeMdcKeyName>spanId</includeMdcKeyName>
+            </encoder>
+        </appender>
+        <root level="INFO">
+            <appender-ref ref="JSON"/>
+        </root>
+    </springProfile>
+
+    <!-- ===== Default (local dev): plain-text logs with trace context ===== -->
+    <springProfile name="!docker">
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>%d{HH:mm:ss.SSS} %-5level [%thread] [%X{traceId}/%X{spanId}] %logger{36} - %msg%n</pattern>
+            </encoder>
+        </appender>
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
+
+</configuration>
